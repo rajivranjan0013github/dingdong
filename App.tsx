@@ -1,5 +1,6 @@
 import "./global.css"
 import { Text, View } from "react-native";
+import HomeScreen from "./src/screens/HomeScreen";
  
 export default function App() {
   return (
@@ -7,6 +8,7 @@ export default function App() {
       <Text className="text-xl font-bold text-blue-500">
         Welcome to Nativewind!
       </Text>
+      <HomeScreen />
     </View>
   );
 }
