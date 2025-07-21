@@ -1,58 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Skeleton } from '../components/ui/skeleton';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentQuestionBook, updateCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { useFocusEffect } from '@react-navigation/native';
+import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 
-// Initial set of questions
-const initialQuestions = [
-  {
-    "question": "What is the capital of France?",
-    "options": ["London", "Paris", "Berlin", "Madrid"],
-    "answer": 1,
-    "explanation": "Paris is the capital and largest city of France, known for its iconic Eiffel Tower."
-  },
-  {
-    "question": "Which planet is known as the Red Planet?",
-    "options": ["Venus", "Mars", "Jupiter", "Saturn"],
-    "answer": 1,
-    "explanation": "Mars appears red due to iron oxide (rust) on its surface."
-  },
-  {
-    "question": "Who painted the Mona Lisa?",
-    "options": ["Vincent van Gogh", "Leonardo da Vinci", "Pablo Picasso", "Michelangelo"],
-    "answer": 1,
-    "explanation": "The Mona Lisa was painted by Leonardo da Vinci in the early 16th century."
-  }
-];
-
-// Additional questions to load
-const additionalQuestions = [ 
-  {
-    "question": "Which is the largest ocean on Earth?",
-    "options": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
-    "answer": 2,
-    "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
-  },
-  {
-    "question": "What is the chemical symbol for gold?",
-    "options": ["Ag", "Au", "Fe", "Cu"],
-    "answer": 1,
-    "explanation": "Au (from the Latin 'aurum') is the chemical symbol for gold."
-  },
-  {
-    "question": "Who wrote 'Romeo and Juliet'?",
-    "options": ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
-    "answer": 1,
-    "explanation": "Romeo and Juliet was written by William Shakespeare in the late 16th century."
-  }
-];
-
-const ResultsDrawer = ({ isVisible, onClose, questions }) => {
+const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
   // Calculate stats similar to QuizResultScreen
   const stats = useMemo(() => {
     const totalQuestions = questions.length;
@@ -79,105 +37,158 @@ const ResultsDrawer = ({ isVisible, onClose, questions }) => {
     };
   }, [questions]);
 
-  const screenHeight = Dimensions.get('window').height;
+  // Bottom sheet ref and snap points
+  const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ['25%', '50%', '90%'], []);
+
+  // Callbacks
+  const handleSheetChanges = useCallback((index) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  // Handle visibility changes
+  useEffect(() => {
+    if (isVisible) {
+      bottomSheetRef.current?.expand();
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isVisible]);
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={isVisible ? 0 : -1}
+      snapPoints={snapPoints}
+      onChange={handleSheetChanges}
+      enablePanDownToClose={true}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{ backgroundColor: '#1f2937' }} // bg-secondary
+      handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
     >
-      <TouchableOpacity 
-        style={{ height: screenHeight * 0.3 }}
-        onPress={onClose}
-        className="bg-secondary/30"
-      />
-      <View className="bg-secondary rounded-t-3xl flex-1">
-        <View className="items-center py-4">
-          <View className="w-12 h-1.5 rounded-full bg-primary" />
+      <BottomSheetView className="flex-1 px-6">
+        <Card className="mb-8 bg-secondary/30">
+          <CardHeader>
+            <CardTitle className="text-3xl text-center">Progress Summary 📊</CardTitle>
+          </CardHeader>
+        </Card>
+        
+        {/* Score Circle */}
+        <View className="items-center mb-8">
+          <View className={`w-40 h-40 rounded-full border-4 items-center justify-center bg-secondary
+            ${stats.isExcellent ? 'border-green-500' : stats.isGood ? 'border-yellow-500' : 'border-red-500'}`}>
+            <Text className={`text-4xl font-bold 
+              ${stats.isExcellent ? 'text-green-500' : stats.isGood ? 'text-yellow-500' : 'text-red-500'}`}>
+              {stats.percentage}%
+            </Text>
+            <Text className="text-muted-foreground text-sm mt-1">Progress</Text>
+          </View>
         </View>
         
-        <ScrollView className="flex-1 px-6">
-          <Card className="mb-8 bg-secondary/30">
-            <CardHeader>
-              <CardTitle className="text-3xl text-center ">Progress Summary 📊</CardTitle>
-            </CardHeader>
-          </Card>
-          
-          {/* Score Circle */}
-          <View className="items-center mb-8">
-            <View className={`w-40 h-40 rounded-full border-4 items-center justify-center bg-secondary
-              ${stats.isExcellent ? 'border-green-500' : stats.isGood ? 'border-yellow-500' : 'border-red-500'}`}>
-              <Text className={`text-4xl font-bold 
-                ${stats.isExcellent ? 'text-green-500' : stats.isGood ? 'text-yellow-500' : 'text-red-500'}`}>
-                {stats.percentage}%
-              </Text>
-              <Text className="text-muted-foreground text-sm mt-1">Progress</Text>
+        {/* Stats */}
+        <Card className="mb-8 bg-secondary/30 border-primary">
+          <CardContent className="flex-row justify-between py-6">
+            <View className="flex-1 items-center">
+              <Text className="text-2xl font-bold text-primary mb-1">{stats.score}</Text>
+              <Text className="text-muted-foreground text-xs">Correct</Text>
             </View>
-          </View>
-          
-          {/* Stats */}
-          <Card className="mb-8 bg-secondary/30 border-primary">
-            <CardContent className="flex-row justify-between py-6">
-              <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-primary mb-1">{stats.score}</Text>
-                <Text className="text-muted-foreground text-xs">Correct</Text>
-              </View>
-              <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-primary mb-1">{stats.attemptedQuestions}</Text>
-                <Text className="text-muted-foreground text-xs">Attempted</Text>
-              </View>
-              <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-primary mb-1">{stats.totalQuestions}</Text>
-                <Text className="text-muted-foreground text-xs">Total</Text>
-              </View>
-            </CardContent>
-          </Card>
-          
-          {/* Result Message */}
-          <Card className="mb-8 bg-secondary/30 border-primary">
-            <CardContent className="py-6">
-              <Text className="text-center text-muted-foreground mb-2">
-                You've answered {stats.score} out of {stats.attemptedQuestions} attempted questions correctly
-                {stats.attemptedQuestions < stats.totalQuestions && (
-                  `\n(${stats.totalQuestions - stats.attemptedQuestions} questions remaining)`
-                )}
-              </Text>
-              <Text className={`text-xl font-bold text-center
-                ${stats.isExcellent ? 'text-green-500' : stats.isGood ? 'text-yellow-500' : 'text-red-500'}`}>
-                {stats.isExcellent ? 'Excellent Progress! 🎉' : stats.isGood ? 'Good Progress! 👍' : 'Keep Learning! 💪'}
-              </Text>
-            </CardContent>
-          </Card>
-        </ScrollView>
-      </View>
-    </Modal>
+            <View className="flex-1 items-center">
+              <Text className="text-2xl font-bold text-primary mb-1">{stats.attemptedQuestions}</Text>
+              <Text className="text-muted-foreground text-xs">Attempted</Text>
+            </View>
+            <View className="flex-1 items-center">
+              <Text className="text-2xl font-bold text-primary mb-1">{stats.totalQuestions}</Text>
+              <Text className="text-muted-foreground text-xs">Total</Text>
+            </View>
+          </CardContent>
+        </Card>
+        
+        {/* Result Message */}
+        <Card className="mb-8 bg-secondary/30 border-primary">
+          <CardContent className="py-6">
+            <Text className="text-center text-muted-foreground mb-2">
+              You've answered {stats.score} out of {stats.attemptedQuestions} attempted questions correctly
+              {stats.attemptedQuestions < stats.totalQuestions && (
+                `\n(${stats.totalQuestions - stats.attemptedQuestions} questions remaining)`
+              )}
+            </Text>
+            <Text className={`text-xl font-bold text-center
+              ${stats.isExcellent ? 'text-green-500' : stats.isGood ? 'text-yellow-500' : 'text-red-500'}`}>
+              {stats.isExcellent ? 'Excellent Progress! 🎉' : stats.isGood ? 'Good Progress! 👍' : 'Keep Learning! 💪'}
+            </Text>
+          </CardContent>
+        </Card>
+      </BottomSheetView>
+    </BottomSheet>
   );
 };
 
-const QuestionBook = ({navigation}) => {
+const QuestionBook = ({ route }) => {
+  const { questionBookId } = route.params;
   const dispatch = useDispatch();
-  const { currentQuestionBook } = useSelector(state => state.questionBook);
+  const { currentQuestionBook, fetchCurrentQuestionBookStatus, updateCurrentQuestionBookStatus } = useSelector(state => state.questionBook);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [questions, setQuestions] = useState([]);
-  const [hasMoreQuestions, setHasMoreQuestions] = useState(true);
+  const questionsRef = useRef([]);
+  const currentQuestionBookRef = useRef(null);
+  const hasChangesRef = useRef(false);
+
+  // Handle back button press
+  useEffect(() => {
+    const backAction = () => {
+      if (isDrawerVisible) {
+        setIsDrawerVisible(false);
+        return true; // Prevent default back action
+      }
+      return false; // Allow default back action
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, [isDrawerVisible]);
 
   useEffect(() => {
-    dispatch(fetchCurrentQuestionBook("687bf7755bb9c617173edb06"));
-  }, []);
+    if(fetchCurrentQuestionBookStatus === 'idle' || currentQuestionBook?._id !== questionBookId) {
+      dispatch(fetchCurrentQuestionBook(questionBookId));
+    }
+  }, [fetchCurrentQuestionBookStatus, dispatch, questionBookId]);
 
   useEffect(() => {
     if(currentQuestionBook) {
       setQuestions(currentQuestionBook.questions);
+      questionsRef.current = currentQuestionBook.questions;
+      currentQuestionBookRef.current = currentQuestionBook;
+      hasChangesRef.current = false; // Reset changes flag when new data is loaded
     }
   }, [currentQuestionBook]);
 
+  // Update ref whenever questions change
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
   const saveQuestionBook = () => {
-    dispatch(updateCurrentQuestionBook({
-      questions: questions,
-      questionBookId: currentQuestionBook._id
-    }));
+    if (hasChangesRef.current && currentQuestionBookRef.current && currentQuestionBookRef.current._id) {
+      dispatch(updateCurrentQuestionBook({
+        questions: questionsRef.current,
+        questionBookId: currentQuestionBookRef.current._id
+      }));
+    }
   };
 
   useFocusEffect(
@@ -185,19 +196,78 @@ const QuestionBook = ({navigation}) => {
       return () => {
         saveQuestionBook();
       };
-    }, [])
+    }, []) // Remove questions dependency
   );
 
   const handleOptionSelect = (questionIndex, selectedOptionIndex) => {
     setQuestions(prev => prev.map((q, index) => 
       index === questionIndex ? { ...q, userAnswer: selectedOptionIndex } : q
     ));
+    hasChangesRef.current = true; // Mark that changes have been made
   };
 
-  const loadMoreQuestions = () => {
-    setQuestions(prev => [...prev, ...additionalQuestions.map(q => ({ ...q, userAnswer: null }))]);
-    setHasMoreQuestions(false); // Disable button after loading all questions
-  };
+  // Show skeleton loading when fetching data
+  if (fetchCurrentQuestionBookStatus === 'loading') {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <StatusBar barStyle="light-content" />
+        <ScrollView className="flex-1">
+          <View className="px-4 py-4">
+            {/* Header Card Skeleton */}
+            <Card className="mb-6">
+              <CardHeader>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-full mb-1" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </View>
+                  <Skeleton className="h-10 w-20 ml-4" />
+                </View>
+              </CardHeader>
+            </Card>
+
+            {/* Questions Skeleton */}
+            <View className="gap-6">
+              {[1, 2, 3].map((index) => (
+                <Card className="rounded-2xl" key={index}>
+                  <CardHeader className="gap-3">
+                    <View className="flex-row items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-16" />
+                    </View>
+                    <Skeleton className="h-6 w-full mb-2" />
+                    <Skeleton className="h-5 w-3/4" />
+                  </CardHeader>
+
+                  <CardContent>
+                    <View className="gap-4">
+                      {[1, 2, 3, 4].map((optionIndex) => (
+                        <View key={optionIndex} className="p-4 rounded-xl border-2 border-border">
+                          <View className="flex-row items-center">
+                            <Skeleton className="w-8 h-8 rounded-full mr-4" />
+                            <Skeleton className="flex-1 h-5" />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Action Buttons Skeleton */}
+              <View className="mt-4 gap-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  console.log('questions', questions);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -215,7 +285,10 @@ const QuestionBook = ({navigation}) => {
                   </CardDescription>
                 </View>
                 <Button
-                  onPress={() => setQuestions(prev => prev.map(q => ({ ...q, userAnswer: null })))}
+                  onPress={() => {
+                    setQuestions(prev => prev.map(q => ({ ...q, userAnswer: null })));
+                    hasChangesRef.current = true; // Mark that changes have been made
+                  }}
                   variant="outline"
                   className="ml-4"
                 >
@@ -229,7 +302,7 @@ const QuestionBook = ({navigation}) => {
           <View className="gap-6">
             {questions.map((question, questionIndex) => {
               const userAnswer = question?.userAnswer;
-              const isAnswered = userAnswer !== null;
+              const isAnswered = userAnswer !== undefined;
               const isCorrect = isAnswered && userAnswer === question?.answer;
 
               return (
@@ -331,19 +404,7 @@ const QuestionBook = ({navigation}) => {
                 </Text>
               </Button>
 
-              <Button
-                onPress={saveQuestionBook}
-                variant="secondary"
-                className="flex-1"
-              >
-                <Text className="text-lg font-bold text-center text-primary">
-                  Save Progress
-                </Text>
-              </Button>
-
-              {hasMoreQuestions && (
                 <Button
-                  onPress={loadMoreQuestions}
                   variant="outline"
                   className="flex-1"
                 >
@@ -351,14 +412,13 @@ const QuestionBook = ({navigation}) => {
                     More Questions 📚
                   </Text>
                 </Button>
-              )}
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Results Drawer */}
-      <ResultsDrawer
+      {/* Results Bottom Sheet */}
+      <ResultsBottomSheet
         isVisible={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}
         questions={questions}

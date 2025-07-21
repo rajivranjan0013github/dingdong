@@ -5,6 +5,7 @@ import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
 import QuizAnalysisScreen from '../screens/QuizAnalysisScreen';
 import QuestionBook from '../screens/QuestionBook';
+import DemoScreen from '../screens/DemoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +38,10 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="QuestionBook" 
           component={QuestionBook} 
+        />
+        <Stack.Screen 
+          name="Demo" 
+          component={DemoScreen} 
         />
       </Stack.Navigator>
   );

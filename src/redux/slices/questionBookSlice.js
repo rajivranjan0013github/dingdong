@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { API_URL } from '../../constrant/config';
+import { updateTopic } from './topicSlice';
 
 export const fetchCurrentQuestionBook = createAsyncThunk(
     'questionBook/fetchCurrentQuestionBook',
@@ -17,7 +18,7 @@ export const fetchCurrentQuestionBook = createAsyncThunk(
 
 export const updateCurrentQuestionBook = createAsyncThunk(
     'questionBook/updateCurrentQuestionBook',
-    async (questionBook) => {
+    async (questionBook, { dispatch}) => {
         const response = await fetch(`${API_URL}/api/question`, {
             method: 'POST',
             headers: {
@@ -30,38 +31,46 @@ export const updateCurrentQuestionBook = createAsyncThunk(
             throw new Error('Failed to update question book');
         }
         const data = await response.json();
+        dispatch(updateTopic(data));
         return data;
     }
 );
 
 const initialState = {
     currentQuestionBook: null,
-    questions: [],
-    fetchQuestionsStatus: 'idle',
+    fetchCurrentQuestionBookStatus: 'idle',
+    updateCurrentQuestionBookStatus: 'idle',
 };
 
 const questionBookSlice = createSlice({ 
     name: 'questionBook',
     initialState,
-    reducers: {},
+    reducers: {
+        setCurrentQuestionBook: (state, action) => {
+            state.currentQuestionBook = action.payload;
+            state.fetchCurrentQuestionBookStatus = 'succeeded';
+        },
+    },
     extraReducers: (builder) => {
         builder.addCase(fetchCurrentQuestionBook.fulfilled, (state, action) => {
             state.currentQuestionBook = action.payload;
-            state.fetchQuestionsStatus = 'succeeded';
+            state.fetchCurrentQuestionBookStatus = 'succeeded';
         })
         .addCase(fetchCurrentQuestionBook.rejected, (state, action) => {
-            state.fetchQuestionsStatus = 'failed';
+            state.fetchCurrentQuestionBookStatus = 'failed';
         }).addCase(fetchCurrentQuestionBook.pending, (state, action) => {
-            state.fetchQuestionsStatus = 'loading';
+            state.fetchCurrentQuestionBookStatus = 'loading';
         }).addCase(updateCurrentQuestionBook.fulfilled, (state, action) => {
             state.currentQuestionBook = action.payload;
-            state.fetchQuestionsStatus = 'succeeded';
+            state.updateCurrentQuestionBookStatus = 'succeeded';
         }).addCase(updateCurrentQuestionBook.rejected, (state, action) => {
-            state.fetchQuestionsStatus = 'failed';
+            state.updateCurrentQuestionBookStatus = 'failed';
         }).addCase(updateCurrentQuestionBook.pending, (state, action) => {
-            state.fetchQuestionsStatus = 'loading';
+            state.updateCurrentQuestionBookStatus = 'loading';
         });
     },
 });
+
+export const { setCurrentQuestionBook } = questionBookSlice.actions;
 
 export default questionBookSlice.reducer;
