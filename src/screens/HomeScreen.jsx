@@ -4,7 +4,7 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  Alert as RNAlert, // Renamed to avoid conflict with UI Alert
   SafeAreaView,
   StatusBar
 } from 'react-native';
@@ -14,6 +14,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchTopics } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
 import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
+import { generateTopic } from '../redux/slices/topicSlice';
+import { Toast } from 'toastify-react-native';
+import { Skeleton } from '../components/ui/skeleton';
 
 // Utility function to calculate relative time
 const getRelativeTime = (dateString) => {
@@ -39,16 +42,25 @@ const getRelativeTime = (dateString) => {
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
-  const { topics: recentTopics, fetchTopicStatus } = useSelector(state => state.topic);
+  const { topics: recentTopics, fetchTopicStatus, generateTopicStatus } = useSelector(state => state.topic);
   const [topic, setTopic] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   useEffect(() => {
     dispatch(fetchTopics());
   }, [dispatch]);
 
+
   const handleGenerateQuiz = async () => {
+    try {
+      dispatch(setCurrentQuestionBook(null)); // Clear previous question book before generating a new one
+      navigation.navigate('GeneratingQuiz'); // Navigate to the loading screen
+      await dispatch(generateTopic(topic)).unwrap();
+      setTopic('');
+      Toast.success('Topic generated successfully!');
+    } catch (error) {
+      Toast.error('Failed to generate topic. Please try again.');
+    }
   };
 
   const handleTopicSelect = (recentTopic) => {
@@ -83,11 +95,11 @@ const HomeScreen = () => {
         <Button
           className="w-full rounded-xl"
           size="lg"
-          disabled={!topic.trim() || isLoading}
+          disabled={!topic.trim() || generateTopicStatus === 'loading'}
           onPress={handleGenerateQuiz}
         >
           <Text className="text-primary-foreground font-semibold text-lg">
-            {isLoading ? 'Generating...' : 'Generate Question'}
+            {generateTopicStatus === 'loading' ? 'Generating...' : 'Generate Question'}
           </Text>
         </Button>
 
@@ -100,7 +112,11 @@ const HomeScreen = () => {
           className="flex-1"
           showsVerticalScrollIndicator={false}
         >
-          {filteredTopics.map((recentTopic, index) => (
+          {fetchTopicStatus === 'loading' ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-[76px] rounded-lg p-4 mb-3" />
+            ))
+          ) : filteredTopics.map((recentTopic, index) => (
             <TouchableOpacity
               key={index}
               className="bg-card border border-border rounded-lg p-4 mb-3"

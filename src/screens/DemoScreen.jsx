@@ -1,84 +1,71 @@
-import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
-import HomePage from '../components/customUI/Demo';
+import { View, Text, SafeAreaView, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
+import { Card, CardHeader, CardContent } from '../components/ui/card';
+import { Skeleton } from '../components/ui/skeleton';
 
-const App = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [recentTopics, setRecentTopics] = useState([
-    {
-      topic: 'JavaScript Fundamentals',
-      date: '2 days ago',
-    },
-    {
-      topic: 'World War II History',
-      date: '1 week ago',
-    },
-    {
-      topic: 'Basic Mathematics',
-      date: '2 weeks ago',
-    },
-    {
-      topic: 'Human Biology',
-      date: '3 weeks ago',
-    },
-    {
-      topic: 'Climate Change',
-      date: '1 month ago',
-    },
-    {
-      topic: 'Ancient Rome',
-      date: '1 month ago',
-    },
-  ]);
-
-  const handleGenerateQuiz = async (topic) => {
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      console.log('Generating quiz for topic:', topic);
-      
-      // Add to recent topics
-      const newRecentTopic = {
-        topic: topic,
-        date: 'Just now',
-      };
-      
-      setRecentTopics(prev => [newRecentTopic, ...prev.slice(0, 9)]);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      Alert.alert(
-        'Quiz Generated!',
-        `Created quiz about "${topic}"`,
-        [
-          {
-            text: 'Start Quiz',
-            onPress: () => {
-              console.log('Starting quiz...');
-            }
-          }
-        ]
-      );
-      
-    } catch (error) {
-      Alert.alert('Error', 'Failed to generate quiz. Please try again.');
-      console.error('Quiz generation error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const DemoScreen = () => {
 
   return (
-    <View style={{ flex: 1 }}>
-      <HomePage
-        onGenerateQuiz={handleGenerateQuiz}
-        recentTopics={recentTopics}
-        isLoading={isLoading}
-      />
+    <View>
+      <ActivityIndicator size="large" color="#0000ff" />
     </View>
   );
+
+  return (
+      <View className="flex-1 bg-background">
+        <StatusBar barStyle="light-content" />
+        <ScrollView className="flex-1">
+          <View className="px-4 py-4">
+            {/* Header Card Skeleton */}
+            <Card className="mb-6">
+              <CardHeader>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-full mb-1" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </View>
+                  <Skeleton className="h-10 w-20 ml-4" />
+                </View>
+              </CardHeader>
+            </Card>
+
+            {/* Questions Skeleton */}
+            <View className="gap-6">
+              {[1, 2].map((index) => (
+                <Card className="rounded-2xl" key={index}>
+                  <CardHeader className="gap-3">
+                    <View className="flex-row items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-16" />
+                    </View>
+                    <Skeleton className="h-6 w-full mb-2" />
+                    <Skeleton className="h-5 w-3/4" />
+                  </CardHeader>
+
+                  <CardContent>
+                    <View className="gap-4">
+                      {[1, 2, 3, 4].map((optionIndex) => (
+                        <View key={optionIndex} className="p-4 rounded-xl border-2 border-border">
+                          <View className="flex-row items-center">
+                            <Skeleton className="w-8 h-8 rounded-full mr-4" />
+                            <Skeleton className="flex-1 h-5" />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <View className="mt-4 gap-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
 };
 
-export default App;
+export default DemoScreen;

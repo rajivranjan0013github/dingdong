@@ -6,6 +6,7 @@ import QuizResultScreen from '../screens/QuizResultScreen';
 import QuizAnalysisScreen from '../screens/QuizAnalysisScreen';
 import QuestionBook from '../screens/QuestionBook';
 import DemoScreen from '../screens/DemoScreen';
+import GeneratingQuizScreen from '../screens/GeneratingQuizScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,10 +39,21 @@ const AppNavigator = () => {
         <Stack.Screen 
           name="QuestionBook" 
           component={QuestionBook} 
+          options={{
+            animation : 'slide_from_right',
+          }}
         />
         <Stack.Screen 
           name="Demo" 
           component={DemoScreen} 
+          options={{
+            animation : 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="GeneratingQuiz" 
+          component={GeneratingQuizScreen} 
+          options={{ headerShown: false }} // Hide header for this screen
         />
       </Stack.Navigator>
   );

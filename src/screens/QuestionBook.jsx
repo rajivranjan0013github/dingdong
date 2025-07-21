@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler } from 'react-native';
+import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler, ActivityIndicator } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentQuestionBook, updateCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { useFocusEffect } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { Toast } from 'toastify-react-native';
 
 const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
   // Calculate stats similar to QuizResultScreen
@@ -146,6 +147,7 @@ const QuestionBook = ({ route }) => {
   const questionsRef = useRef([]);
   const currentQuestionBookRef = useRef(null);
   const hasChangesRef = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handle back button press
   useEffect(() => {
@@ -174,8 +176,10 @@ const QuestionBook = ({ route }) => {
       questionsRef.current = currentQuestionBook.questions;
       currentQuestionBookRef.current = currentQuestionBook;
       hasChangesRef.current = false; // Reset changes flag when new data is loaded
+      // setIsLoading(false);
     }
   }, [currentQuestionBook]);
+
 
   // Update ref whenever questions change
   useEffect(() => {
@@ -188,8 +192,19 @@ const QuestionBook = ({ route }) => {
         questions: questionsRef.current,
         questionBookId: currentQuestionBookRef.current._id
       }));
+      Toast.success('Question book saved successfully!');
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if(fetchCurrentQuestionBookStatus === 'succeeded') {
+        setIsLoading(false);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [currentQuestionBook]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -207,10 +222,9 @@ const QuestionBook = ({ route }) => {
   };
 
   // Show skeleton loading when fetching data
-  if (fetchCurrentQuestionBookStatus === 'loading') {
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <StatusBar barStyle="light-content" />
         <ScrollView className="flex-1">
           <View className="px-4 py-4">
             {/* Header Card Skeleton */}
@@ -229,7 +243,7 @@ const QuestionBook = ({ route }) => {
 
             {/* Questions Skeleton */}
             <View className="gap-6">
-              {[1, 2, 3].map((index) => (
+              {[1, 2].map((index) => (
                 <Card className="rounded-2xl" key={index}>
                   <CardHeader className="gap-3">
                     <View className="flex-row items-center justify-between">
@@ -267,8 +281,6 @@ const QuestionBook = ({ route }) => {
     );
   }
 
-  console.log('questions', questions);
-
   return (
     <SafeAreaView className="flex-1 bg-background">
       <StatusBar barStyle="light-content" />
@@ -279,7 +291,7 @@ const QuestionBook = ({ route }) => {
             <CardHeader>
               <View className="flex-row items-center justify-between">
                 <View className="flex-1">
-                  <CardTitle>Question Book</CardTitle>
+                  <CardTitle>{currentQuestionBook?.topic}</CardTitle>
                   <CardDescription>
                     Practice questions with immediate feedback. Select any option to see the correct answer and explanation.
                   </CardDescription>
