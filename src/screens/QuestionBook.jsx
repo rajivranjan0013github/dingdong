@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { Toast } from 'toastify-react-native';
 
-const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
+const ResultsBottomSheet = ({ isVisible, onClose, questions, handleMarkAsCompleted }) => {
   // Calculate stats similar to QuizResultScreen
   const stats = useMemo(() => {
     const totalQuestions = questions.length;
@@ -133,6 +133,17 @@ const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
             </Text>
           </CardContent>
         </Card>
+        <Button
+                variant="outline"
+                className="flex-1 border-primary"
+                onPress={() => {
+                  handleMarkAsCompleted();
+                }}
+              >
+                <Text className="font-bold text-center text-primary">
+                  Mark as Completed
+                </Text>
+              </Button>
       </BottomSheetView>
     </BottomSheet>
   );
@@ -140,9 +151,15 @@ const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
 
 const QuestionCard = React.memo(
   ({ question, questionIndex, handleOptionSelect }) => {
-    const userAnswer = question?.userAnswer;
-    const isAnswered = typeof userAnswer === 'number';
-    const isCorrect = isAnswered && userAnswer === question?.answer;
+    const [internalUserAnswer, setInternalUserAnswer] = useState(question?.userAnswer);
+
+    // Sync internal state with prop
+    useEffect(() => {
+      setInternalUserAnswer(question?.userAnswer);
+    }, [question?.userAnswer]);
+
+    const isAnswered = typeof internalUserAnswer === 'number';
+    const isCorrect = isAnswered && internalUserAnswer === question?.answer;
 
     return (
       <Card className="rounded-2xl" key={questionIndex}>
@@ -166,7 +183,7 @@ const QuestionCard = React.memo(
         <CardContent>
           <View className="gap-4">
             {question?.options.map((option, optionIndex) => {
-              const isUserAnswer = userAnswer === optionIndex;
+              const isUserAnswer = internalUserAnswer === optionIndex;
               const isCorrectAnswer = question?.answer === optionIndex;
               
               let bgColor = 'bg-card';
@@ -188,7 +205,12 @@ const QuestionCard = React.memo(
               return (
                 <TouchableOpacity
                   key={optionIndex}
-                  onPress={() => !isAnswered && handleOptionSelect(questionIndex, optionIndex)}
+                  onPress={() => {
+                    if (!isAnswered) {
+                      setInternalUserAnswer(optionIndex); // Immediate visual update
+                      handleOptionSelect(questionIndex, optionIndex); // Propagate to parent
+                    }
+                  }}
                   disabled={isAnswered}
                 >
                   <View
@@ -313,6 +335,16 @@ const QuestionBook = ({ route }) => {
     }, []) // Remove questions dependency
   );
 
+  const handleMarkAsCompleted = () => {
+    dispatch(updateCurrentQuestionBook({
+      questions: questionsRef.current,
+      questionBookId: currentQuestionBookRef.current._id,
+      status: 'completed'
+    }));
+    setIsDrawerVisible(false);
+    Toast.success('Question Completed!');
+  };
+
   const handleOptionSelect = useCallback((questionIndex, selectedOptionIndex) => {
     setQuestions(prev => {
       // Only update the changed question
@@ -401,9 +433,9 @@ const QuestionBook = ({ route }) => {
               handleOptionSelect={handleOptionSelect}
             />
           )}
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          windowSize={7}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={14}
           removeClippedSubviews={true}
           extraData={questions}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 24 }}
@@ -460,6 +492,7 @@ const QuestionBook = ({ route }) => {
         isVisible={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}
         questions={questions}
+        handleMarkAsCompleted={handleMarkAsCompleted}
       />
     </SafeAreaView>
   );

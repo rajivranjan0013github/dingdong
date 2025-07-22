@@ -31,7 +31,7 @@ export const generateTopic = createAsyncThunk('topic/generateTopic', async (topi
         throw new Error('Failed to generate topic');
     }
     const data = await response.json();
-    dispatch(setCurrentQuestionBook(data));
+    dispatch(setCurrentQuestionBook(data?.data));
     return data;
 });
 
