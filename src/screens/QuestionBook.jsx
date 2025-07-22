@@ -143,6 +143,7 @@ const QuestionCard = React.memo(
     const userAnswer = question?.userAnswer;
     const isAnswered = typeof userAnswer === 'number';
     const isCorrect = isAnswered && userAnswer === question?.answer;
+    console.log(question)
 
     return (
       <Card className="rounded-2xl" key={questionIndex}>
@@ -286,6 +287,7 @@ const QuestionBook = ({ route }) => {
   }, [questions]);
 
   const saveQuestionBook = () => {
+    console.log("updating question book")
     if (hasChangesRef.current && currentQuestionBookRef.current && currentQuestionBookRef.current._id) {
       dispatch(updateCurrentQuestionBook({
         questions: questionsRef.current,
