@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler, ActivityIndicator } from 'react-native';
+import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler, ActivityIndicator, FlatList } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -15,11 +15,11 @@ const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
   // Calculate stats similar to QuizResultScreen
   const stats = useMemo(() => {
     const totalQuestions = questions.length;
-    const attemptedQuestions = questions.filter(q => q.userAnswer !== null).length;
+    const attemptedQuestions = questions.filter(q => q.userAnswer !== undefined).length;
     
     let score = 0;
     questions.forEach((question, index) => {
-      if (question.userAnswer !== null && question.userAnswer === question.answer) {
+      if (question.userAnswer !== undefined && question.userAnswer === question.answer) {
         score += 1;
       }
     });
@@ -138,6 +138,107 @@ const ResultsBottomSheet = ({ isVisible, onClose, questions }) => {
   );
 };
 
+const QuestionCard = React.memo(
+  ({ question, questionIndex, handleOptionSelect }) => {
+    const userAnswer = question?.userAnswer;
+    const isAnswered = typeof userAnswer === 'number';
+    const isCorrect = isAnswered && userAnswer === question?.answer;
+
+    return (
+      <Card className="rounded-2xl" key={questionIndex}>
+        <CardHeader className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-primary text-sm font-semibold uppercase tracking-wide">
+              Question {questionIndex + 1}
+            </Text>
+            {isAnswered && (
+              <Badge 
+                variant={isCorrect ? 'success' : 'destructive'} 
+                className='rounded-full px-2 py-1'
+              >
+                <Text>{isCorrect ? 'Correct' : 'Incorrect'}</Text>
+              </Badge>
+            )}
+          </View>
+          <CardTitle className="text-xl">{question?.question}</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <View className="gap-4">
+            {question?.options.map((option, optionIndex) => {
+              const isUserAnswer = userAnswer === optionIndex;
+              const isCorrectAnswer = question?.answer === optionIndex;
+              
+              let bgColor = 'bg-card';
+              let borderColor = 'border-border';
+              let textColor = 'text-foreground';
+              
+              if (isAnswered) {
+                if (isCorrectAnswer) {
+                  bgColor = 'bg-green-500/10';
+                  borderColor = 'border-green-500';
+                  textColor = 'text-green-500';
+                } else if (isUserAnswer) {
+                  bgColor = 'bg-red-500/10';
+                  borderColor = 'border-red-500';
+                  textColor = 'text-red-500';
+                }
+              }
+
+              return (
+                <TouchableOpacity
+                  key={optionIndex}
+                  onPress={() => !isAnswered && handleOptionSelect(questionIndex, optionIndex)}
+                  disabled={isAnswered}
+                >
+                  <View
+                    className={`relative p-4 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
+                  >
+                    <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mr-4">
+                      <Text className="text-sm font-bold text-muted-foreground">
+                        {String.fromCharCode(65 + optionIndex)}
+                      </Text>
+                    </View>
+                    <Text className={`flex-1 text-base ${textColor}`}>
+                      {option}
+                    </Text>
+                    {isAnswered && (isUserAnswer || isCorrectAnswer) && (
+                      <Badge variant='secondary' className='absolute -right-0 -top-0'>
+                        <Text className='text-xs'>
+                          {isUserAnswer ? 'Your Answer' : 'Correct Answer'}
+                        </Text>
+                      </Badge>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Explanation section - shown after answering */}
+            {isAnswered && (
+              <View className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <Text className="text-sm font-medium text-primary">
+                  Explanation:
+                </Text>
+                <Text className="text-sm text-muted-foreground mt-1">
+                  {question?.explanation}
+                </Text>
+              </View>
+            )}
+          </View>
+        </CardContent>
+      </Card>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if the question object or index changes
+    return (
+      prevProps.question === nextProps.question &&
+      prevProps.questionIndex === nextProps.questionIndex
+    );
+  }
+);
+
 const QuestionBook = ({ route }) => {
   const { questionBookId } = route.params;
   const dispatch = useDispatch();
@@ -176,10 +277,8 @@ const QuestionBook = ({ route }) => {
       questionsRef.current = currentQuestionBook.questions;
       currentQuestionBookRef.current = currentQuestionBook;
       hasChangesRef.current = false; // Reset changes flag when new data is loaded
-      // setIsLoading(false);
     }
   }, [currentQuestionBook]);
-
 
   // Update ref whenever questions change
   useEffect(() => {
@@ -214,12 +313,19 @@ const QuestionBook = ({ route }) => {
     }, []) // Remove questions dependency
   );
 
-  const handleOptionSelect = (questionIndex, selectedOptionIndex) => {
-    setQuestions(prev => prev.map((q, index) => 
-      index === questionIndex ? { ...q, userAnswer: selectedOptionIndex } : q
-    ));
+  const handleOptionSelect = useCallback((questionIndex, selectedOptionIndex) => {
+    setQuestions(prev => {
+      // Only update the changed question
+      if (prev[questionIndex]?.userAnswer === selectedOptionIndex) return prev;
+      const newQuestions = [...prev];
+      newQuestions[questionIndex] = {
+        ...newQuestions[questionIndex],
+        userAnswer: selectedOptionIndex,
+      };
+      return newQuestions;
+    });
     hasChangesRef.current = true; // Mark that changes have been made
-  };
+  }, []);
 
   // Show skeleton loading when fetching data
   if (isLoading) {
@@ -284,127 +390,48 @@ const QuestionBook = ({ route }) => {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <StatusBar barStyle="light-content" />
-      <ScrollView className="flex-1">
-        <View className="px-4 py-4">
-          {/* Header Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <CardTitle>{currentQuestionBook?.topic}</CardTitle>
-                  <CardDescription>
-                    Practice questions with immediate feedback. Select any option to see the correct answer and explanation.
-                  </CardDescription>
+      <View className="flex-1">
+        <FlatList
+          data={questions}
+          keyExtractor={(item, index) => (item._id ? item._id : index.toString())}
+          renderItem={({ item, index }) => (
+            <QuestionCard
+              question={item}
+              questionIndex={index}
+              handleOptionSelect={handleOptionSelect}
+            />
+          )}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={7}
+          removeClippedSubviews={true}
+          extraData={questions}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 24 }}
+          ListHeaderComponent={
+            <Card className="mb-6">
+              <CardHeader>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <CardTitle>{currentQuestionBook?.topic}</CardTitle>
+                    <CardDescription>
+                      Practice questions with immediate feedback.
+                    </CardDescription>
+                  </View>
+                  <Button
+                    onPress={() => {
+                      setQuestions(prev => prev.map(q => ({ ...q, userAnswer: undefined })));
+                      hasChangesRef.current = true; // Mark that changes have been made
+                    }}
+                    variant="outline"
+                    className="ml-4"
+                  >
+                    <Text className="font-bold text-primary">Retry</Text>
+                  </Button>
                 </View>
-                <Button
-                  onPress={() => {
-                    setQuestions(prev => prev.map(q => ({ ...q, userAnswer: null })));
-                    hasChangesRef.current = true; // Mark that changes have been made
-                  }}
-                  variant="outline"
-                  className="ml-4"
-                >
-                  <Text className="font-bold text-primary">Retry</Text>
-                </Button>
-              </View>
-            </CardHeader>
-          </Card>
-
-          {/* Questions */}
-          <View className="gap-6">
-            {questions.map((question, questionIndex) => {
-              const userAnswer = question?.userAnswer;
-              const isAnswered = userAnswer !== undefined;
-              const isCorrect = isAnswered && userAnswer === question?.answer;
-
-              return (
-                <Card className="rounded-2xl" key={questionIndex}>
-                  <CardHeader className="gap-3">
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-primary text-sm font-semibold uppercase tracking-wide">
-                        Question {questionIndex + 1}
-                      </Text>
-                      {isAnswered && (
-                        <Badge 
-                          variant={isCorrect ? 'success' : 'destructive'} 
-                          className='rounded-full px-2 py-1'
-                        >
-                          <Text>{isCorrect ? 'Correct' : 'Incorrect'}</Text>
-                        </Badge>
-                      )}
-                    </View>
-                    <CardTitle className="text-xl">{question?.question}</CardTitle>
-                  </CardHeader>
-
-                  <CardContent>
-                    <View className="gap-4">
-                      {question?.options.map((option, optionIndex) => {
-                        const isUserAnswer = userAnswer === optionIndex;
-                        const isCorrectAnswer = question?.answer === optionIndex;
-                        
-                        let bgColor = 'bg-card';
-                        let borderColor = 'border-border';
-                        let textColor = 'text-foreground';
-                        
-                        if (isAnswered) {
-                          if (isCorrectAnswer) {
-                            bgColor = 'bg-green-500/10';
-                            borderColor = 'border-green-500';
-                            textColor = 'text-green-500';
-                          } else if (isUserAnswer) {
-                            bgColor = 'bg-red-500/10';
-                            borderColor = 'border-red-500';
-                            textColor = 'text-red-500';
-                          }
-                        }
-
-                        return (
-                          <TouchableOpacity
-                            key={optionIndex}
-                            onPress={() => !isAnswered && handleOptionSelect(questionIndex, optionIndex)}
-                            disabled={isAnswered}
-                          >
-                            <View
-                              className={`relative p-4 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
-                            >
-                              <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mr-4">
-                                <Text className="text-sm font-bold text-muted-foreground">
-                                  {String.fromCharCode(65 + optionIndex)}
-                                </Text>
-                              </View>
-                              <Text className={`flex-1 text-base ${textColor}`}>
-                                {option}
-                              </Text>
-                              {isAnswered && (isUserAnswer || isCorrectAnswer) && (
-                                <Badge variant='secondary' className='absolute -right-0 -top-0'>
-                                  <Text className='text-xs'>
-                                    {isUserAnswer ? 'Your Answer' : 'Correct Answer'}
-                                  </Text>
-                                </Badge>
-                              )}
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      })}
-
-                      {/* Explanation section - shown after answering */}
-                      {isAnswered && (
-                        <View className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                          <Text className="text-sm font-medium text-primary">
-                            Explanation:
-                          </Text>
-                          <Text className="text-sm text-muted-foreground mt-1">
-                            {question?.explanation}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </CardContent>
-                </Card>
-              );
-            })}
-
-            {/* Action Buttons at the end of questions */}
+              </CardHeader>
+            </Card>
+          }
+          ListFooterComponent={
             <View className="mt-4 gap-4">
               <Button
                 onPress={() => setIsDrawerVisible(true)}
@@ -415,19 +442,18 @@ const QuestionBook = ({ route }) => {
                   Progress 📊
                 </Text>
               </Button>
-
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Text className="font-bold text-center text-primary">
-                    More Questions 📚
-                  </Text>
-                </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+              >
+                <Text className="font-bold text-center text-primary">
+                  More Questions 📚
+                </Text>
+              </Button>
             </View>
-          </View>
-        </View>
-      </ScrollView>
+          }
+        />
+      </View>
 
       {/* Results Bottom Sheet */}
       <ResultsBottomSheet

@@ -3,20 +3,12 @@ import "./global.css"
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
-import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import { StatusBar, useColorScheme } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ToastManager, { BaseToast, SuccessToast, ErrorToast, InfoToast, WarnToast } from 'toastify-react-native';
+import ToastManager, { SuccessToast, ErrorToast, InfoToast, WarnToast } from 'toastify-react-native';
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: 'transparent',
-  },
-};
 
 export default function App() {
   const colorScheme = useColorScheme();

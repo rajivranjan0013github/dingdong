@@ -75,6 +75,8 @@ const topicSlice = createSlice({
             .addCase(generateTopic.rejected, (state, action) => {
                 state.generateTopicStatus = 'failed';
                 state.error = action.error.message;
+                console.log(action.error);
+                
             });
     },
 });
