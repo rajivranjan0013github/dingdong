@@ -32,7 +32,7 @@ export const generateTopic = createAsyncThunk('topic/generateTopic', async (topi
     }
     const data = await response.json();
     dispatch(setCurrentQuestionBook(data.data));
-    return data;
+    return data.data;
 });
 
 const topicSlice = createSlice({
