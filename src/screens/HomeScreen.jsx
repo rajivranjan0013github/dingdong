@@ -3,10 +3,9 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Alert as RNAlert, // Renamed to avoid conflict with UI Alert
   SafeAreaView,
   StatusBar,
-  FlatList // Import FlatList
+  FlatList
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
@@ -18,28 +17,7 @@ import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { generateTopic } from '../redux/slices/topicSlice';
 import { Toast } from 'toastify-react-native';
 import { Skeleton } from '../components/ui/skeleton';
-
-// Utility function to calculate relative time
-const getRelativeTime = (dateString) => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffInMs = now - date;
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInMinutes < 1) {
-    return 'Just now';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} min ago`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours} hr ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  } else {
-    return date.toLocaleDateString();
-  }
-};
+import { getRelativeTime } from '../assets/utility';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
