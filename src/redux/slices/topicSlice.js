@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { API_URL } from '../../constrant/config';
+import { API_URL } from '../../constants/config';
 import {
   setCurrentQuestionBook,
   updateCurrentQuestionBook,

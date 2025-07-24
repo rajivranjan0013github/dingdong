@@ -22,7 +22,6 @@ export default function App() {
           <NavigationContainer>
           <AppNavigator />
           </NavigationContainer>
-        {/* </ThemeProvider> */}
       </Provider>
       <ToastManager config={{
         success: (props) => <SuccessToast {...props} theme={theme} />,

@@ -328,7 +328,7 @@ const QuestionCard = React.memo(
 );
 
 const QuestionBook = ({ route }) => {
-  const { questionBookId } = route.params;
+  const { questionBookId } = route?.params;
   const dispatch = useDispatch();
   const {
     currentQuestionBook,
