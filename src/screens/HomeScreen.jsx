@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
-  ScrollView,
   TouchableOpacity,
   Alert as RNAlert, // Renamed to avoid conflict with UI Alert
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  FlatList // Import FlatList
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTopics } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +48,7 @@ const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
   useEffect(() => {
+    console.log('fetching topics');
     dispatch(fetchTopics());
   }, [dispatch]);
 
@@ -72,6 +74,7 @@ const HomeScreen = () => {
   const filteredTopics = recentTopics.filter(recentTopic =>
     recentTopic?.topic?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  console.log('filteredTopics', filteredTopics);
 
   return (
     <SafeAreaView className="flex-1 bg-background px-5">
@@ -108,37 +111,58 @@ const HomeScreen = () => {
 
       {/* Topics List - Takes remaining height */}
       <View className="flex-1">
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-        >
-          {fetchTopicStatus === 'loading' ? (
-            Array.from({ length: 5 }).map((_, index) => (
+        {fetchTopicStatus === 'loading' ? (
+          <FlatList
+            data={Array.from({ length: 5 })}
+            renderItem={({ index }) => (
               <Skeleton key={index} className="h-[76px] rounded-lg p-4 mb-3" />
-            ))
-          ) : filteredTopics.map((recentTopic, index) => (
-            <TouchableOpacity
-              key={index}
-              className="bg-card border border-border rounded-lg p-4 mb-3"
-              onPress={() => handleTopicSelect(recentTopic)}
-            >
-              <Text className="text-foreground font-semibold text-base mb-1">
-                {recentTopic.topic}
-              </Text>
-              <Text className="text-muted-foreground text-sm">
-                {getRelativeTime(recentTopic.createdAt)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-
-          {filteredTopics.length === 0 && searchQuery && (
-            <View className="items-center py-10">
-              <Text className="text-muted-foreground text-base">
-                No topics found
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+            )}
+            keyExtractor={(_, index) => String(index)}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <FlatList
+            data={filteredTopics}
+            keyExtractor={(item) => item._id}
+            initialNumToRender={5}
+            maxToRenderPerBatch={5}
+            windowSize={7}
+            removeClippedSubviews={true}
+            extraData={filteredTopics}
+            // contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 24 }}
+            renderItem={({ item: recentTopic }) => (
+              <TouchableOpacity
+                className="bg-card border border-border rounded-lg p-4 mb-3"
+                onPress={() => handleTopicSelect(recentTopic)}
+              >
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-row items-center">
+                    <Text className="text-foreground font-semibold text-base mb-1 mr-2 capitalize">
+                      {recentTopic.topic}
+                    </Text>
+                    <Badge variant={recentTopic.status === 'completed' ? 'success' : 'default'}>
+                      <Text>{recentTopic.status === 'completed' ? 'Completed' : 'Pending'}</Text>
+                    </Badge>
+                  </View>
+                  <Text className="text-muted-foreground text-sm">
+                    {getRelativeTime(recentTopic.createdAt)}
+                  </Text>
+                </View>
+                <Text className="text-muted-foreground text-sm mt-1">
+                  Questions: {recentTopic.questions.length} | Answered: {recentTopic.questions.filter(q => q.userAnswer !== undefined).length}
+                </Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={searchQuery ? (
+              <View className="items-center py-10">
+                <Text className="text-muted-foreground text-base">
+                  No topics found
+                </Text>
+              </View>
+            ) : null}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
