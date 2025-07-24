@@ -77,39 +77,35 @@ const AppNavigator = () => {
         />
       )}
     >
-  
-  <Drawer.Screen name="Login" options={{ headerShown: false }}>
-    {props => <LoginScreen onLogin={handleLogin} {...props} />}
-  </Drawer.Screen>
+      <Drawer.Screen name="Login" options={{ headerShown: false }}>
+        {props => <LoginScreen onLogin={handleLogin} {...props} />}
+      </Drawer.Screen>
 
-  <Drawer.Screen
-    name="Home"
-    options={{ headerShown: !!user }}
-  >
-    {props => <HomeScreen {...props} user={user} />}
-  </Drawer.Screen>
-          <Drawer.Screen name="Quiz" component={QuizScreen} />
-          <Drawer.Screen name="QuizResult" component={QuizResultScreen} />
-          <Drawer.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
-          <Drawer.Screen
-            name="QuestionBook"
-            component={QuestionBook}
-            options={{
-              animation: 'slide_from_right',
-            }}
-          />
-          <Drawer.Screen // Changed to Drawer.Screen
-            name="Demo"
-            component={DemoScreen}
-            options={{
-              animation: 'slide_from_right',
-            }}
-          />
-          <Drawer.Screen // Changed to Drawer.Screen
-            name="GeneratingQuiz"
-            component={GeneratingQuizScreen}
-            options={{ headerShown: false }} // Hide header for this screen
-          />
+      <Drawer.Screen name="Home" options={{ headerShown: !!user }}>
+        {props => <HomeScreen {...props} user={user} />}
+      </Drawer.Screen>
+      <Drawer.Screen name="Quiz" component={QuizScreen} />
+      <Drawer.Screen name="QuizResult" component={QuizResultScreen} />
+      <Drawer.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
+      <Drawer.Screen
+        name="QuestionBook"
+        component={QuestionBook}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Drawer.Screen // Changed to Drawer.Screen
+        name="Demo"
+        component={DemoScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Drawer.Screen // Changed to Drawer.Screen
+        name="GeneratingQuiz"
+        component={GeneratingQuizScreen}
+        options={{ headerShown: false }} // Hide header for this screen
+      />
     </Drawer.Navigator>
   );
 };

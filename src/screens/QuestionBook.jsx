@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useRef,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import {
   View,
@@ -11,10 +12,10 @@ import {
   SafeAreaView,
   StatusBar,
   TouchableOpacity,
-  Dimensions,
   BackHandler,
   ActivityIndicator,
   FlatList,
+  ToastAndroid,
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import {
@@ -39,6 +40,9 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { Toast } from 'toastify-react-native';
 import { generateMoreQuestions } from '../redux/slices/topicSlice';
+import { useNavigation } from '@react-navigation/native';
+import { EllipsisVertical, Repeat, Check, X, BarChart2 } from 'lucide-react-native';
+import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 
 const ResultsBottomSheet = ({
   isVisible,
@@ -48,16 +52,16 @@ const ResultsBottomSheet = ({
 }) => {
   // Calculate stats similar to QuizResultScreen
   const stats = useMemo(() => {
-    const totalQuestions = questions.length;
-    const attemptedQuestions = questions.filter(
+    const totalQuestions = questions?.length;
+    const attemptedQuestions = questions?.filter(
       q => q.userAnswer !== undefined,
     ).length;
 
     let score = 0;
-    questions.forEach((question, index) => {
+    questions?.forEach((question, index) => {
       if (
-        question.userAnswer !== undefined &&
-        question.userAnswer === question.answer
+        question?.userAnswer !== undefined &&
+        question?.userAnswer === question?.answer
       ) {
         score += 1;
       }
@@ -121,7 +125,7 @@ const ResultsBottomSheet = ({
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#1f2937' }} // bg-secondary
+      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
       handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
     >
       <BottomSheetView className="flex-1 px-6">
@@ -327,8 +331,122 @@ const QuestionCard = React.memo(
   },
 );
 
+const OptionsBottomSheet = ({
+  isVisible,
+  onClose,
+  onClearProgress,
+  onMarkAsCompleted,
+  setIsDrawerVisible,
+}) => {
+  const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ['20%', '35%'], []);
+  const [showAlert, setShowAlert] = useState(false);
+
+  const handleSheetChanges = useCallback(
+    index => {
+      if (index === -1) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
+  const renderBackdrop = useCallback(
+    props => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    [],
+  );
+
+  useEffect(() => {
+    if (isVisible) {
+      bottomSheetRef.current?.expand();
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isVisible]);
+
+  return (
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={isVisible ? 0 : -1}
+      snapPoints={snapPoints}
+      onChange={handleSheetChanges}
+      enablePanDownToClose={true}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
+      handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
+    >
+      <BottomSheetView className="flex-1 px-6 py-4">
+        {/* <Text className="text-2xl font-bold text-center text-primary mb-6">
+          Options
+        </Text> */}
+        <TouchableOpacity
+          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
+          onPress={() => setShowAlert(true)}
+        >
+          <Repeat size={20} color='white' className="mr-2" />
+          <Text className="text-primary text-lg font-semibold">
+            Reattempt
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
+          onPress={() => {
+            onMarkAsCompleted();
+            onClose();
+          }}
+        >
+          <Check size={20} color='white' className="mr-2" />
+          <Text className="text-primary text-lg font-semibold">
+            Mark as Completed
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
+          onPress={() => {
+            setIsDrawerVisible(true); // Assuming this opens the progress sheet
+            onClose();
+          }}
+        >
+          <BarChart2 size={20} color='white' className="mr-2" />
+          <Text className="text-primary text-lg font-semibold">
+            View Progress
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30"
+          onPress={onClose}
+        >
+          <X size={20} color='white' className="mr-2" />
+          <Text className="text-primary text-lg font-semibold">Close</Text>
+        </TouchableOpacity>
+        <CustomAlertDialog
+          visible={showAlert}
+          onCancel={() => setShowAlert(false)}
+          onConfirm={() => {
+            setShowAlert(false);
+            onClearProgress();
+            onClose();
+          }}
+          title="Reattempt All Questions?"
+          message="This will clear all your previous answers. Are you sure you want to reattempt?"
+          confirmText="Reattempt"
+          cancelText="Cancel"
+        />
+      </BottomSheetView>
+    </BottomSheet>
+  );
+};
+
 const QuestionBook = ({ route }) => {
-  const { questionBookId } = route?.params;
+  const { questionBookId } = route.params;
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const {
     currentQuestionBook,
@@ -342,12 +460,14 @@ const QuestionBook = ({ route }) => {
   const hasChangesRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const { generateMoreQuestionsStatus } = useSelector(state => state.topic);
+  const [isOptionsDrawerVisible, setIsOptionsDrawerVisible] = useState(false);
 
   // Handle back button press
   useEffect(() => {
     const backAction = () => {
-      if (isDrawerVisible) {
+      if (isDrawerVisible || isOptionsDrawerVisible) {
         setIsDrawerVisible(false);
+        setIsOptionsDrawerVisible(false);
         return true; // Prevent default back action
       }
       return false; // Allow default back action
@@ -359,7 +479,7 @@ const QuestionBook = ({ route }) => {
     );
 
     return () => backHandler.remove();
-  }, [isDrawerVisible]);
+  }, [isDrawerVisible, isOptionsDrawerVisible]);
 
   useEffect(() => {
     if (
@@ -385,22 +505,27 @@ const QuestionBook = ({ route }) => {
   }, [questions]);
 
   const saveQuestionBook = () => {
-    console.log('updating question book');
     if (
       hasChangesRef.current &&
       currentQuestionBookRef.current &&
       currentQuestionBookRef.current._id
     ) {
+      const allQuestionsAnswered = questionsRef.current.every(
+        question => question.userAnswer !== undefined,
+      );
+
       dispatch(
         updateCurrentQuestionBook({
           questions: questionsRef.current,
           questionBookId: currentQuestionBookRef.current._id,
+          status: allQuestionsAnswered ? 'completed' : 'pending',
         }),
       );
-      Toast.success('Question book saved successfully!');
+      ToastAndroid.show('Your response has been saved!', ToastAndroid.SHORT);
     }
   };
 
+  // Set the loading state to false when the current question book is fetched
   useEffect(() => {
     const timer = setTimeout(() => {
       if (fetchCurrentQuestionBookStatus === 'succeeded') {
@@ -411,6 +536,18 @@ const QuestionBook = ({ route }) => {
     return () => clearTimeout(timer);
   }, [currentQuestionBook]);
 
+  // Set the header right icon to the ellipsis icon
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
+          <EllipsisVertical size={24} color='white' />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
+  // Save question book when the user navigates away from the screen
   useFocusEffect(
     React.useCallback(() => {
       return () => {
@@ -419,6 +556,7 @@ const QuestionBook = ({ route }) => {
     }, []), // Remove questions dependency
   );
 
+  // Handle marking the question book as completed
   const handleMarkAsCompleted = () => {
     dispatch(
       updateCurrentQuestionBook({
@@ -428,9 +566,17 @@ const QuestionBook = ({ route }) => {
       }),
     );
     setIsDrawerVisible(false);
-    Toast.success('Question Completed!');
+    ToastAndroid.show('You have marked as completed!', ToastAndroid.SHORT);
   };
 
+  // Handle clearing the progress
+  const handleClearProgress = useCallback(() => {
+    setQuestions(prev => prev.map(q => ({ ...q, userAnswer: undefined })));
+    hasChangesRef.current = true; // Mark that changes have been made
+    ToastAndroid.show('All previous answers cleared!', ToastAndroid.SHORT);
+  }, []);
+
+  // Handle selecting an option
   const handleOptionSelect = useCallback(
     (questionIndex, selectedOptionIndex) => {
       setQuestions(prev => {
@@ -544,23 +690,9 @@ const QuestionBook = ({ route }) => {
               <CardHeader>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <CardTitle>{currentQuestionBook?.topic}</CardTitle>
-                    <CardDescription>
-                      Practice questions with immediate feedback.
-                    </CardDescription>
+                    <CardTitle className="text-2xl font-bold text-foreground mb-1">{currentQuestionBook?.topic}</CardTitle>
+                    <CardDescription className="text-base text-muted-foreground">{currentQuestionBook?.prompt}</CardDescription>
                   </View>
-                  <Button
-                    onPress={() => {
-                      setQuestions(prev =>
-                        prev.map(q => ({ ...q, userAnswer: undefined })),
-                      );
-                      hasChangesRef.current = true; // Mark that changes have been made
-                    }}
-                    variant="outline"
-                    className="ml-4"
-                  >
-                    <Text className="font-bold text-primary">Retry</Text>
-                  </Button>
                 </View>
               </CardHeader>
             </Card>
@@ -585,7 +717,12 @@ const QuestionBook = ({ route }) => {
                 disabled={generateMoreQuestionsStatus === 'loading'}
               >
                 {generateMoreQuestionsStatus === 'loading' ? (
-                  <ActivityIndicator color="#007AFF" />
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator color="#007AFF" />
+                    <Text className="text-primary text-lg font-semibold">
+                      Generating...
+                    </Text>
+                  </View>
                 ) : (
                   <Text className="font-bold text-center text-primary">
                     More Questions 📚
@@ -603,6 +740,15 @@ const QuestionBook = ({ route }) => {
         onClose={() => setIsDrawerVisible(false)}
         questions={questions}
         handleMarkAsCompleted={handleMarkAsCompleted}
+      />
+
+      {/* Options Bottom Sheet */}
+      <OptionsBottomSheet
+        isVisible={isOptionsDrawerVisible}
+        onClose={() => setIsOptionsDrawerVisible(false)}
+        onClearProgress={handleClearProgress}
+        onMarkAsCompleted={handleMarkAsCompleted}
+        setIsDrawerVisible={setIsDrawerVisible}
       />
     </SafeAreaView>
   );

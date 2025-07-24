@@ -3,10 +3,9 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Alert as RNAlert, // Renamed to avoid conflict with UI Alert
   SafeAreaView,
   StatusBar,
-  FlatList // Import FlatList
+  FlatList
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
@@ -18,28 +17,7 @@ import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { generateTopic } from '../redux/slices/topicSlice';
 import { Toast } from 'toastify-react-native';
 import { Skeleton } from '../components/ui/skeleton';
-
-// Utility function to calculate relative time
-const getRelativeTime = (dateString) => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffInMs = now - date;
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInMinutes < 1) {
-    return 'Just now';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  } else {
-    return date.toLocaleDateString();
-  }
-};
+import { getRelativeTime } from '../assets/utility';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
@@ -48,7 +26,6 @@ const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
   useEffect(() => {
-    console.log('fetching topics');
     dispatch(fetchTopics());
   }, [dispatch]);
 
@@ -57,7 +34,7 @@ const HomeScreen = () => {
     try {
       dispatch(setCurrentQuestionBook(null)); // Clear previous question book before generating a new one
       navigation.navigate('GeneratingQuiz'); // Navigate to the loading screen
-      await dispatch(generateTopic(topic)).unwrap();
+      await dispatch(generateTopic(topic));
       setTopic('');
       Toast.success('Topic generated successfully!');
     } catch (error) {
@@ -71,7 +48,7 @@ const HomeScreen = () => {
   };
 
   // Filter recent topics based on search query
-  const filteredTopics = recentTopics.filter(recentTopic =>
+  const filteredTopics = recentTopics?.filter(recentTopic =>
     recentTopic?.topic?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   console.log('filteredTopics', filteredTopics);
@@ -79,7 +56,6 @@ const HomeScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-background px-5">
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
-
       {/* Fixed Header Section */}
       <View className="gap-4 mb-4">
         {/* Topic Input Section */}
@@ -132,25 +108,28 @@ const HomeScreen = () => {
             // contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 24 }}
             renderItem={({ item: recentTopic }) => (
               <TouchableOpacity
-                className="bg-card border border-border rounded-lg p-4 mb-3"
+                className="bg-card border border-border rounded-lg p-4 mb-3 flex-row justify-between items-center"
                 onPress={() => handleTopicSelect(recentTopic)}
               >
-                <View className="flex-row justify-between items-center">
+                <View className="flex-col justify-between">
                   <View className="flex-row items-center">
                     <Text className="text-foreground font-semibold text-base mb-1 mr-2 capitalize">
-                      {recentTopic.topic}
+                      {recentTopic?.topic && recentTopic.topic?.length > 25
+                        ? recentTopic.topic.substring(0, 20) + '...'
+                        : recentTopic?.topic}
                     </Text>
-                    <Badge variant={recentTopic.status === 'completed' ? 'success' : 'default'}>
-                      <Text>{recentTopic.status === 'completed' ? 'Completed' : 'Pending'}</Text>
+                    <Badge variant={recentTopic?.status === 'completed' ? 'success' : 'default'}>
+                      <Text>{recentTopic?.status === 'completed' ? 'Completed' : 'Pending'}</Text>
                     </Badge>
                   </View>
-                  <Text className="text-muted-foreground text-sm">
+                  <Text className="text-muted-foreground text-sm mt-1">
+                  Questions: {recentTopic.questions?.length} | Answered: {recentTopic.questions?.filter(q => q.userAnswer !== undefined)?.length}
+                </Text>
+                </View>
+                <Text className="text-muted-foreground text-sm">
                     {getRelativeTime(recentTopic.createdAt)}
                   </Text>
-                </View>
-                <Text className="text-muted-foreground text-sm mt-1">
-                  Questions: {recentTopic.questions.length} | Answered: {recentTopic.questions.filter(q => q.userAnswer !== undefined).length}
-                </Text>
+                
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
