@@ -32,7 +32,7 @@ export const generateTopic = createAsyncThunk('topic/generateTopic', async (topi
     }
     const data = await response.json();
     dispatch(setCurrentQuestionBook(data?.data));
-    return data;
+    return data?.data;
 });
 
 const topicSlice = createSlice({
@@ -75,7 +75,7 @@ const topicSlice = createSlice({
             .addCase(generateTopic.rejected, (state, action) => {
                 state.generateTopicStatus = 'failed';
                 state.error = action.error.message;
-                console.log(action.error);
+                // console.log(action.error);
                 
             });
     },

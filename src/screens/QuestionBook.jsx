@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, Dimensions, BackHandler, ActivityIndicator, FlatList } from 'react-native';
+import React, { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+import { View, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, BackHandler, FlatList, ToastAndroid } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -7,9 +7,79 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentQuestionBook, updateCurrentQuestionBook } from '../redux/slices/questionBookSlice';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { EllipsisVertical } from 'lucide-react-native';
 import { Toast } from 'toastify-react-native';
+
+const OptionsBottomSheet = ({ isVisible, onClose, onClearProgress, onMarkAsCompleted }) => {
+  const bottomSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ['25%', '40%'], []);
+
+  const handleSheetChanges = useCallback((index) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  useEffect(() => {
+    if (isVisible) {
+      bottomSheetRef.current?.expand();
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isVisible]);
+
+  return (
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={isVisible ? 0 : -1}
+      snapPoints={snapPoints}
+      onChange={handleSheetChanges}
+      enablePanDownToClose={true}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
+      handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
+    >
+      <BottomSheetView className="flex-1 px-6 py-4">
+        <Text className="text-2xl font-bold text-primary mb-6 text-center">Options</Text>
+        <View className="gap-4">
+          <Button
+            variant="outline"
+            className="border-primary"
+            onPress={() => {
+              onClearProgress();
+              onClose();
+            }}
+          >
+            <Text className="font-bold text-primary">Retry</Text>
+          </Button>
+          <Button
+            variant="outline"
+            onPress={() => {
+              onMarkAsCompleted();
+              onClose();
+            }}
+          >
+            <Text className="font-bold text-white">Mark as Completed</Text>
+          </Button>
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
+  );
+};
 
 const ResultsBottomSheet = ({ isVisible, onClose, questions, handleMarkAsCompleted }) => {
   // Calculate stats similar to QuizResultScreen
@@ -78,7 +148,7 @@ const ResultsBottomSheet = ({ isVisible, onClose, questions, handleMarkAsComplet
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#1f2937' }} // bg-secondary
+      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
       handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
     >
       <BottomSheetView className="flex-1 px-6">
@@ -271,12 +341,15 @@ const QuestionBook = ({ route }) => {
   const currentQuestionBookRef = useRef(null);
   const hasChangesRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
+  const navigation = useNavigation();
+  const [isOptionsDrawerVisible, setIsOptionsDrawerVisible] = useState(false);
 
   // Handle back button press
   useEffect(() => {
     const backAction = () => {
-      if (isDrawerVisible) {
+      if (isDrawerVisible || isOptionsDrawerVisible) {
         setIsDrawerVisible(false);
+        setIsOptionsDrawerVisible(false);
         return true; // Prevent default back action
       }
       return false; // Allow default back action
@@ -285,7 +358,7 @@ const QuestionBook = ({ route }) => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [isDrawerVisible]);
+  }, [isDrawerVisible, isOptionsDrawerVisible]);
 
   useEffect(() => {
     if(fetchCurrentQuestionBookStatus === 'idle' || currentQuestionBook?._id !== questionBookId) {
@@ -313,7 +386,8 @@ const QuestionBook = ({ route }) => {
         questions: questionsRef.current,
         questionBookId: currentQuestionBookRef.current._id
       }));
-      Toast.success('Question book saved successfully!');
+      // Toast.success('Question book saved successfully!', 'bottom');
+      ToastAndroid.show('Saved!', ToastAndroid.SHORT);
     }
   };
 
@@ -326,6 +400,16 @@ const QuestionBook = ({ route }) => {
 
     return () => clearTimeout(timer);
   }, [currentQuestionBook]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
+          <EllipsisVertical size={24} color='white' />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -342,8 +426,15 @@ const QuestionBook = ({ route }) => {
       status: 'completed'
     }));
     setIsDrawerVisible(false);
-    Toast.success('Question Completed!');
+    // Toast.success('Question Completed!');
+    ToastAndroid.show('Completed!', ToastAndroid.SHORT);
   };
+
+  const handleClearProgress = useCallback(() => {
+    setQuestions(prev => prev.map(q => ({ ...q, userAnswer: undefined })));
+    hasChangesRef.current = true; // Mark that changes have been made
+    ToastAndroid.show('Progress cleared!', ToastAndroid.SHORT);
+  }, []);
 
   const handleOptionSelect = useCallback((questionIndex, selectedOptionIndex) => {
     setQuestions(prev => {
@@ -477,9 +568,10 @@ const QuestionBook = ({ route }) => {
               <Button
                 variant="outline"
                 className="flex-1"
+                onPress={() => setIsOptionsDrawerVisible(true)} // Can also trigger options from here if needed
               >
                 <Text className="font-bold text-center text-primary">
-                  More Questions 📚
+                  More Options 📚
                 </Text>
               </Button>
             </View>
@@ -493,6 +585,14 @@ const QuestionBook = ({ route }) => {
         onClose={() => setIsDrawerVisible(false)}
         questions={questions}
         handleMarkAsCompleted={handleMarkAsCompleted}
+      />
+
+      {/* Options Bottom Sheet */}
+      <OptionsBottomSheet
+        isVisible={isOptionsDrawerVisible}
+        onClose={() => setIsOptionsDrawerVisible(false)}
+        onClearProgress={handleClearProgress}
+        onMarkAsCompleted={handleMarkAsCompleted}
       />
     </SafeAreaView>
   );

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '../ui/text';
 import { Button } from '../ui/button';
-import { ChevronDownIcon, ChevronLeftIcon } from 'lucide-react-native';
+import { ChevronDownIcon } from 'lucide-react-native';
 
 const CustomHeader = ({ title, timer = 0, onSubmit, totalQuestions = 0, currentQuestion = 0 }) => {
   const navigation = useNavigation();

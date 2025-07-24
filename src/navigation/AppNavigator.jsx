@@ -41,6 +41,7 @@ const AppNavigator = () => {
           component={QuestionBook} 
           options={{
             animation : 'slide_from_right',
+            headerRight: () => null, // Placeholder to allow component to set it
           }}
         />
         <Stack.Screen 
