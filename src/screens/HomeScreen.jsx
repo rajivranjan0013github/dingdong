@@ -123,7 +123,7 @@ const HomeScreen = () => {
                     </Badge>
                   </View>
                   <Text className="text-muted-foreground text-sm mt-1">
-                  Questions: {recentTopic.questions?.length} | Answered: {recentTopic.questions?.filter(q => q.userAnswer !== undefined)?.length}
+                  Questions: {recentTopic?.questionLength} | Answered: {recentTopic?.answeredLength}
                 </Text>
                 </View>
                 <Text className="text-muted-foreground text-sm">

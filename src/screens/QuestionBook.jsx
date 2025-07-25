@@ -482,13 +482,8 @@ const QuestionBook = ({ route }) => {
   }, [isDrawerVisible, isOptionsDrawerVisible]);
 
   useEffect(() => {
-    if (
-      fetchCurrentQuestionBookStatus === 'idle' ||
-      currentQuestionBook?._id !== questionBookId
-    ) {
       dispatch(fetchCurrentQuestionBook(questionBookId));
-    }
-  }, [fetchCurrentQuestionBookStatus, dispatch, questionBookId]);
+  }, [ dispatch, questionBookId]);
 
   useEffect(() => {
     if (currentQuestionBook) {
@@ -531,7 +526,7 @@ const QuestionBook = ({ route }) => {
       if (fetchCurrentQuestionBookStatus === 'succeeded') {
         setIsLoading(false);
       }
-    }, 100);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [currentQuestionBook]);
@@ -674,7 +669,7 @@ const QuestionBook = ({ route }) => {
               handleOptionSelect={handleOptionSelect}
             />
           )}
-          initialNumToRender={10}
+          initialNumToRender={7}
           maxToRenderPerBatch={10}
           windowSize={14}
           removeClippedSubviews={true}
