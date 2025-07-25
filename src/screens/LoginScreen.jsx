@@ -65,7 +65,7 @@ async function platformSpecificSignUp() {
   }
 }
 
-function Login({ handleLogin, navigation }) {
+function Login({ onLogin }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
@@ -75,16 +75,9 @@ function Login({ handleLogin, navigation }) {
 
       // Persist user credential
       await AsyncStorage.setItem('user', JSON.stringify(credential?.user));
-      if (typeof handleLogin === 'function') {
-        handleLogin(credential?.user);
-      }
-      if (navigation && credential?.user) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        });
-      }
-     
+      console.log(typeof onLogin);
+
+      onLogin(credential?.user);
     } catch (error) {
       console.error('Sign-in failed', error);
     } finally {

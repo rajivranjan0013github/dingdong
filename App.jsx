@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import "./global.css"
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator';
+import MainNavigator from './src/navigation/MainNavigator';
 import { StatusBar, useColorScheme } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
@@ -20,7 +20,7 @@ export default function App() {
         {/* <ThemeProvider value={navTheme}> */}
           <StatusBar barStyle={'light-content'} />
           <NavigationContainer>
-          <AppNavigator />
+          <MainNavigator />
           </NavigationContainer>
       </Provider>
       <ToastManager config={{

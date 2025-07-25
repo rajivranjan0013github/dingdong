@@ -1,112 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer'; // Changed to createDrawerNavigator
+// navigators/AppNavigator.js
+import React, { useEffect, useState } from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser, logout } from '../redux/slices/userSlice';
+
+import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
 import QuizAnalysisScreen from '../screens/QuizAnalysisScreen';
-import QuestionBook from '../screens/QuestionBook';
-import Feather from 'react-native-vector-icons/Feather';
-import DemoScreen from '../screens/DemoScreen';
 import GeneratingQuizScreen from '../screens/GeneratingQuizScreen';
-import LoginScreen from '../screens/LoginScreen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button, View, Text } from 'react-native'; // Added View and Text
-import { useNavigation } from '@react-navigation/native'; // Added useNavigation
-import CustomDrawerContent from './CustomDrawerContent';
-
-const Drawer = createDrawerNavigator(); // Changed to Drawer
+import QuestionBook from '../screens/QuestionBook';
+import ProfileScreen from '../screens/ProfileScreen';
+import UserInitialsBadge from './UserInitialsBadge';
+const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
+  const dispatch = useDispatch();
+  const { user, isLoggedIn } = useSelector(state => state.user);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const user = await AsyncStorage.getItem('user');
-        if (user) {
-          setUser(user);
-        }
-      } catch (e) {
-        console.error('Failed to load user from AsyncStorage', e);
-      } finally {
-        setIsLoading(false);
+    const loadUser = async () => {
+      const savedUser = await AsyncStorage.getItem('user');
+      console.log('savedUser', savedUser);
+      if (savedUser) {
+        dispatch(setUser(JSON.parse(savedUser)));
       }
+      setIsLoading(false);
     };
-
-    checkLoginStatus();
+    loadUser();
   }, []);
 
   const handleLogin = user => {
-    setUser(user);
-    setIsLoggedIn(true);
-    // You might want to store the user object in state or context if needed elsewhere
+    dispatch(setUser(user));
+    console.log('user', user);
   };
-  console.log(user);
 
-  if (isLoading) {
-    // We could render a splash screen or loading indicator here
-    return null; // Or a loading component
-  }
+  if (isLoading) return null;
+  console.log('isLoggedIn', isLoggedIn);
+  console.log('user', user);
 
   return (
-    <Drawer.Navigator // Changed to Drawer.Navigator
-      initialRouteName={user ? 'Home' : 'Login'}
-      screenOptions={({ navigation }) => ({
-        // Added navigation to screenOptions
-        headerStyle: { backgroundColor: 'black' },
-        headerTintColor: 'white',
-        headerTitleStyle: { fontWeight: 'bold' },
-        headerLeft: () => (
-          // Added headerLeft button
-          <Feather
-            name="menu"
-            size={30}
-            color="white"
-            style={{ marginLeft: 16 }}
-            onPress={() => navigation.toggleDrawer()}
+    <Stack.Navigator 
+    screenOptions={({ navigation }) => ({
+      headerStyle: { backgroundColor: 'black' },
+      headerTintColor: 'white',
+      headerTitleStyle: { fontWeight: 'bold' },
+      headerRight: () =>
+        isLoggedIn && user?.name ? (
+          <UserInitialsBadge
+            name={user.name}
+            onPress={() => navigation.navigate('Profile')}
           />
-        ),
-      })}
-      drawerContent={props => (
-        <CustomDrawerContent
-          {...props}
-          user={user}
-          setIsLoggedIn={setIsLoggedIn}
-        />
-      )}
+        ) : null,
+    })}
     >
-      <Drawer.Screen name="Login" options={{ headerShown: false }}>
-        {props => <LoginScreen onLogin={handleLogin} {...props} />}
-      </Drawer.Screen>
+      {!isLoggedIn && (
+        <Stack.Screen name="Login">
+          {props => <LoginScreen {...props} onLogin={handleLogin} />}
+        </Stack.Screen>
+      )}
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Quiz" component={QuizScreen} />
+      <Stack.Screen name="QuizResult" component={QuizResultScreen} />
+      <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
+      <Stack.Screen 
+          name="QuestionBook" 
+          component={QuestionBook} 
+          options={{
+            animation : 'slide_from_right',
+          }}
+        />
+      <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
 
-      <Drawer.Screen name="Home" options={{ headerShown: !!user }}>
-        {props => <HomeScreen {...props} user={user} />}
-      </Drawer.Screen>
-      <Drawer.Screen name="Quiz" component={QuizScreen} />
-      <Drawer.Screen name="QuizResult" component={QuizResultScreen} />
-      <Drawer.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
-      <Drawer.Screen
-        name="QuestionBook"
-        component={QuestionBook}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Drawer.Screen // Changed to Drawer.Screen
-        name="Demo"
-        component={DemoScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Drawer.Screen // Changed to Drawer.Screen
-        name="GeneratingQuiz"
-        component={GeneratingQuizScreen}
-        options={{ headerShown: false }} // Hide header for this screen
-      />
-    </Drawer.Navigator>
+    </Stack.Navigator>
   );
 };
 
