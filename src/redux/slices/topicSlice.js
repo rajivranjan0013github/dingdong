@@ -12,16 +12,37 @@ const initialState = {
   generateTopicStatus: 'idle',
   error: null,
   generateMoreQuestionsStatus: 'idle',
+  hasMore: true,
+  isFetchingMore: false,
+  skip: 0,
+  limit: 10,
 };
 
-export const fetchTopics = createAsyncThunk('topic/fetchTopics', async () => {
-  const response = await fetch(`${API_URL}/api/topic`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch topics');
+// Fetch first page of topics
+export const fetchTopics = createAsyncThunk(
+  'topic/fetchTopics',
+  async ({ skip = 0, limit = 10 } = {}) => {
+    const response = await fetch(`${API_URL}/api/topic?skip=${skip}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch topics');
+    }
+    const data = await response.json();
+    return { ...data, skip, limit };
   }
-  const data = await response.json();
-  return data;
-});
+);
+
+// Fetch more topics for pagination
+export const fetchMoreTopics = createAsyncThunk(
+  'topic/fetchMoreTopics',
+  async ({ skip, limit }, { getState }) => {
+    const response = await fetch(`${API_URL}/api/topic?skip=${skip}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch more topics');
+    }
+    const data = await response.json();
+    return { ...data, skip, limit };
+  }
+);
 
 export const generateTopic = createAsyncThunk(
   'topic/generateTopic',
@@ -82,19 +103,44 @@ const topicSlice = createSlice({
         };
       }
     },
+    resetTopics: (state) => {
+      state.topics = [];
+      state.hasMore = true;
+      state.skip = 0;
+    },
   },
   extraReducers: builder => {
     builder
       .addCase(fetchTopics.pending, state => {
         state.fetchTopicStatus = 'loading';
+        state.error = null;
+        state.topics = [];
+        state.skip = 0;
+        state.hasMore = true;
       })
       .addCase(fetchTopics.fulfilled, (state, action) => {
         state.fetchTopicStatus = 'succeeded';
-        console.log('action.payload fetch', action.payload);
-        state.topics = action.payload;
+        state.topics = action.payload.topics;
+        state.hasMore = action.payload.hasMore;
+        state.skip = action.payload.topics.length;
+        state.limit = action.payload.limit;
       })
       .addCase(fetchTopics.rejected, (state, action) => {
         state.fetchTopicStatus = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(fetchMoreTopics.pending, state => {
+        state.isFetchingMore = true;
+        state.error = null;
+      })
+      .addCase(fetchMoreTopics.fulfilled, (state, action) => {
+        state.isFetchingMore = false;
+        state.topics = [...state.topics, ...action.payload.topics];
+        state.hasMore = action.payload.hasMore;
+        state.skip += action.payload.topics.length;
+      })
+      .addCase(fetchMoreTopics.rejected, (state, action) => {
+        state.isFetchingMore = false;
         state.error = action.error.message;
       })
       .addCase(generateTopic.pending, state => {
@@ -135,6 +181,6 @@ const topicSlice = createSlice({
   },
 });
 
-export const { updateTopic } = topicSlice.actions;
+export const { updateTopic, resetTopics } = topicSlice.actions;
 
 export default topicSlice.reducer;

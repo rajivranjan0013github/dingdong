@@ -41,7 +41,7 @@ import BottomSheet, {
 import { Toast } from 'toastify-react-native';
 import { generateMoreQuestions } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
-import { EllipsisVertical, Repeat, Check, X, BarChart2 } from 'lucide-react-native';
+import { EllipsisVertical, Repeat, Check, X, BarChart2, Filter as FilterIcon } from 'lucide-react-native';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 
 const ResultsBottomSheet = ({
@@ -337,6 +337,8 @@ const OptionsBottomSheet = ({
   onClearProgress,
   onMarkAsCompleted,
   setIsDrawerVisible,
+  handleToggleFilterBar, // TOGGLE HANDLER
+  showFilterBar, // STATE
 }) => {
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ['20%', '35%'], []);
@@ -426,6 +428,18 @@ const OptionsBottomSheet = ({
           <X size={20} color='white' className="mr-2" />
           <Text className="text-primary text-lg font-semibold">Close</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
+          onPress={() => {
+            handleToggleFilterBar();
+            onClose();
+          }}
+        >
+          <FilterIcon size={20} color='white' className="mr-2" />
+          <Text className="text-primary text-lg font-semibold">
+            {showFilterBar ? 'Hide Filters' : 'Show Filters'}
+          </Text>
+        </TouchableOpacity>
         <CustomAlertDialog
           visible={showAlert}
           onCancel={() => setShowAlert(false)}
@@ -444,6 +458,13 @@ const OptionsBottomSheet = ({
   );
 };
 
+const FILTERS = [
+  { label: 'All', value: 'all' },
+  { label: 'Correct', value: 'correct' },
+  { label: 'Incorrect', value: 'incorrect' },
+  { label: 'Unattempted', value: 'unattempted' },
+];
+
 const QuestionBook = ({ route }) => {
   const { questionBookId } = route.params;
   const navigation = useNavigation();
@@ -451,7 +472,6 @@ const QuestionBook = ({ route }) => {
   const {
     currentQuestionBook,
     fetchCurrentQuestionBookStatus,
-    updateCurrentQuestionBookStatus,
   } = useSelector(state => state.questionBook);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -461,6 +481,8 @@ const QuestionBook = ({ route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { generateMoreQuestionsStatus } = useSelector(state => state.topic);
   const [isOptionsDrawerVisible, setIsOptionsDrawerVisible] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [showFilterBar, setShowFilterBar] = useState(false);
 
   // Handle back button press
   useEffect(() => {
@@ -487,7 +509,20 @@ const QuestionBook = ({ route }) => {
 
   useEffect(() => {
     if (currentQuestionBook) {
-      setQuestions(currentQuestionBook.questions);
+      setQuestions(prevQuestions => {
+        // Create a map of previous answers by question _id
+        const prevAnswers = {};
+        prevQuestions?.forEach(q => {
+          if (q._id && q.userAnswer !== undefined) {
+            prevAnswers[q._id] = q.userAnswer;
+          }
+        });
+        // Merge userAnswer into new questions if available
+        return currentQuestionBook?.questions?.map(q => ({
+          ...q,
+          userAnswer: prevAnswers[q._id] !== undefined ? prevAnswers[q._id] : q.userAnswer,
+        }));
+      });
       questionsRef.current = currentQuestionBook.questions;
       currentQuestionBookRef.current = currentQuestionBook;
       hasChangesRef.current = false; // Reset changes flag when new data is loaded
@@ -590,6 +625,33 @@ const QuestionBook = ({ route }) => {
     [],
   );
 
+  // Filtered questions based on selected filter
+  const filteredQuestions = useMemo(() => {
+    if (selectedFilter === 'all') return questions;
+    if (selectedFilter === 'correct') {
+      return questions.filter(
+        q => typeof q.userAnswer === 'number' && q.userAnswer === q.answer
+      );
+    }
+    if (selectedFilter === 'incorrect') {
+      return questions.filter(
+        q => typeof q.userAnswer === 'number' && q.userAnswer !== q.answer
+      );
+    }
+    if (selectedFilter === 'unattempted') {
+      return questions.filter(q => q.userAnswer === undefined);
+    }
+    return questions;
+  }, [questions, selectedFilter]);
+
+  // Handler to toggle filter bar and reset filter if hiding
+  const handleToggleFilterBar = () => {
+    setShowFilterBar(prev => {
+      if (prev) setSelectedFilter('all');
+      return !prev;
+    });
+  };
+
   // Show skeleton loading when fetching data
   if (isLoading) {
     return (
@@ -656,16 +718,36 @@ const QuestionBook = ({ route }) => {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <StatusBar barStyle="light-content" />
+      {/* Filter UI - at the very top, with icon */}
+      <View className="w-full flex-row items-center justify-center">
+        {showFilterBar && (
+          <View className="flex-row items-center gap-2">
+            {FILTERS.map(f => (
+              <Button
+                key={f.value}
+                variant={selectedFilter === f.value ? 'default' : 'outline'}
+                size="sm"
+                className={selectedFilter === f.value ? 'border-primary' : ''}
+                onPress={() => setSelectedFilter(f.value)}
+              >
+                <Text className={selectedFilter === f.value ? 'text-primary-foreground font-bold' : 'text-primary'}>
+                  {f.label}
+                </Text>
+              </Button>
+            ))}
+          </View>
+        )}
+      </View>
       <View className="flex-1">
         <FlatList
-          data={questions}
+          data={filteredQuestions}
           keyExtractor={(item, index) =>
             item._id ? item._id : index.toString()
           }
           renderItem={({ item, index }) => (
             <QuestionCard
               question={item}
-              questionIndex={index}
+              questionIndex={questions.indexOf(item)}
               handleOptionSelect={handleOptionSelect}
             />
           )}
@@ -744,6 +826,8 @@ const QuestionBook = ({ route }) => {
         onClearProgress={handleClearProgress}
         onMarkAsCompleted={handleMarkAsCompleted}
         setIsDrawerVisible={setIsDrawerVisible}
+        handleToggleFilterBar={handleToggleFilterBar} // PASS DOWN TOGGLE HANDLER
+        showFilterBar={showFilterBar} // PASS STATE
       />
     </SafeAreaView>
   );

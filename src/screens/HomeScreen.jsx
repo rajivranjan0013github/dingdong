@@ -5,13 +5,14 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  FlatList
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchTopics } from '../redux/slices/topicSlice';
+import { fetchTopics, fetchMoreTopics } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
 import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { generateTopic } from '../redux/slices/topicSlice';
@@ -21,14 +22,28 @@ import { getRelativeTime } from '../assets/utility';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
-  const { topics: recentTopics, fetchTopicStatus, generateTopicStatus } = useSelector(state => state.topic);
+  const {
+    topics: recentTopics,
+    fetchTopicStatus,
+    generateTopicStatus,
+    hasMore,
+    isFetchingMore,
+    skip,
+    limit,
+  } = useSelector(state => state.topic);
   const [topic, setTopic] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
+
   useEffect(() => {
-    dispatch(fetchTopics());
+    dispatch(fetchTopics({ skip: 0, limit: 10 }));
   }, [dispatch]);
 
+  const handleLoadMore = () => {
+    if (hasMore && !isFetchingMore && fetchTopicStatus === 'succeeded') {
+      dispatch(fetchMoreTopics({ skip, limit }));
+    }
+  };
 
   const handleGenerateQuiz = async () => {
     try {
@@ -48,9 +63,11 @@ const HomeScreen = () => {
   };
 
   // Filter recent topics based on search query
-  const filteredTopics = recentTopics?.filter(recentTopic =>
-    recentTopic?.topic?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTopics = searchQuery
+    ? recentTopics?.filter(recentTopic =>
+        recentTopic?.topic?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : recentTopics;
   console.log('filteredTopics', filteredTopics);
 
   return (
@@ -105,7 +122,6 @@ const HomeScreen = () => {
             windowSize={7}
             removeClippedSubviews={true}
             extraData={filteredTopics}
-            // contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 24 }}
             renderItem={({ item: recentTopic }) => (
               <TouchableOpacity
                 className="bg-card border border-border rounded-lg p-4 mb-3 flex-row justify-between items-center"
@@ -129,7 +145,6 @@ const HomeScreen = () => {
                 <Text className="text-muted-foreground text-sm">
                     {getRelativeTime(recentTopic.createdAt)}
                   </Text>
-                
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
@@ -140,6 +155,15 @@ const HomeScreen = () => {
                 </Text>
               </View>
             ) : null}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingMore && hasMore ? (
+                <View style={{ paddingVertical: 16 }}>
+                  <ActivityIndicator size="small" color="#888" />
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
