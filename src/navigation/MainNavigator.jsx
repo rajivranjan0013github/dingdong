@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { storage } from '../utils/MMKVStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/slices/userSlice';
+import { View } from 'react-native';
 
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
@@ -15,14 +16,24 @@ const MainNavigator = () => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const savedUser = storage.getString('user');
-      if (savedUser) dispatch(setUser(JSON.parse(savedUser)));
-      setIsLoading(false);
+      try {
+        const savedUser = storage.getString('user');
+        if (savedUser) dispatch(setUser(JSON.parse(savedUser)));
+      } catch (error) {
+        console.error('Error loading user:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadUser();
   }, []);
 
-  if (isLoading) return null;
+  // Show a loading view that matches the splash screen background
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000000' }} />
+    );
+  }
 
   return <>{isLoggedIn ? <AppNavigator /> : <AuthNavigator />}</>;
 };

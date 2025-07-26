@@ -76,7 +76,6 @@ const HomeScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
       {/* Fixed Header Section */}
       <View className="gap-4 mb-4">
-        {/* Topic Input Section */}
         <View className="bg-card border border-border rounded-xl p-2 ">
           <TextInput
             className="text-foreground text-base min-h-[100] max-h-[150]"
@@ -103,7 +102,6 @@ const HomeScreen = () => {
         <Text className="text-2xl font-bold mt-4">Recent Topics</Text>|
       </View>
 
-      {/* Topics List - Takes remaining height */}
       <View className="flex-1">
         {fetchTopicStatus === 'loading' ? (
           <FlatList

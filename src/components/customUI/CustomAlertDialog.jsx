@@ -39,7 +39,11 @@ const CustomAlertDialog = ({
           )}
         </View>
         <CardHeader className="items-center mt-2">
-          <CardTitle className="text-xl font-bold text-primary text-center mb-1">{title}</CardTitle>
+          <CardTitle className="text-xl font-bold text-primary text-center mb-1">
+            <Text className="text-xl font-bold text-primary text-center mb-1">
+              {title}
+            </Text>
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-0 pt-1">
           {children ? (

@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import {
   View,
-  ScrollView,
   SafeAreaView,
   StatusBar,
   TouchableOpacity,
@@ -38,11 +37,115 @@ import BottomSheet, {
   BottomSheetView,
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
-import { Toast } from 'toastify-react-native';
 import { generateMoreQuestions } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
-import { EllipsisVertical, Repeat, Check, X, BarChart2, Filter as FilterIcon } from 'lucide-react-native';
+import {
+  EllipsisVertical,
+  Repeat,
+  Check,
+  X,
+  BarChart2,
+  Filter as FilterIcon,
+  List,
+  ChevronDown,
+  BookOpen,
+  AlertCircle,
+} from 'lucide-react-native';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
+
+// Constants
+const FILTERS = [
+  { label: 'All', value: 'all' },
+  { label: 'Correct', value: 'correct' },
+  { label: 'Incorrect', value: 'incorrect' },
+  { label: 'Unattempted', value: 'unattempted' },
+];
+
+const ANIMATION_DURATION = 300;
+const FLATLIST_CONFIG = {
+  initialNumToRender: 7,
+  maxToRenderPerBatch: 10,
+  windowSize: 14,
+  removeClippedSubviews: true,
+};
+
+const SNAP_POINTS = ['25%', '50%', '90%'];
+const OPTIONS_SNAP_POINTS = ['20%', '35%'];
+
+// Utility functions
+const calculateStats = questions => {
+  if (!questions?.length)
+    return {
+      score: 0,
+      totalQuestions: 0,
+      attemptedQuestions: 0,
+      incorrectCount: 0,
+      percentage: 0,
+      isExcellent: false,
+      isGood: false,
+    };
+
+  const totalQuestions = questions.length;
+  const attemptedQuestions = questions.filter(
+    q => q.userAnswer !== undefined,
+  ).length;
+  const score = questions.reduce((acc, question) => {
+    return (
+      acc +
+      (question?.userAnswer !== undefined &&
+      question?.userAnswer === question?.answer
+        ? 1
+        : 0)
+    );
+  }, 0);
+  const incorrectCount = questions.reduce((acc, question) => {
+    return (
+      acc +
+      (question?.userAnswer !== undefined &&
+      question?.userAnswer !== question?.answer
+        ? 1
+        : 0)
+    );
+  }, 0);
+
+  const percentage =
+    attemptedQuestions > 0 ? Math.round((score / attemptedQuestions) * 100) : 0;
+
+  return {
+    score,
+    totalQuestions,
+    attemptedQuestions,
+    incorrectCount,
+    percentage,
+    isExcellent: percentage >= 80,
+    isGood: percentage >= 60,
+  };
+};
+
+const filterQuestions = (questions, selectedFilter) => {
+  if (selectedFilter === 'all') return questions;
+  if (selectedFilter === 'correct') {
+    return questions.filter(
+      q => typeof q.userAnswer === 'number' && q.userAnswer === q.answer,
+    );
+  }
+  if (selectedFilter === 'incorrect') {
+    return questions.filter(
+      q => typeof q.userAnswer === 'number' && q.userAnswer !== q.answer,
+    );
+  }
+  if (selectedFilter === 'unattempted') {
+    return questions.filter(q => q.userAnswer === undefined);
+  }
+  return questions;
+};
 
 const ResultsBottomSheet = ({
   isVisible,
@@ -50,41 +153,11 @@ const ResultsBottomSheet = ({
   questions,
   handleMarkAsCompleted,
 }) => {
-  // Calculate stats similar to QuizResultScreen
-  const stats = useMemo(() => {
-    const totalQuestions = questions?.length;
-    const attemptedQuestions = questions?.filter(
-      q => q.userAnswer !== undefined,
-    ).length;
-
-    let score = 0;
-    questions?.forEach((question, index) => {
-      if (
-        question?.userAnswer !== undefined &&
-        question?.userAnswer === question?.answer
-      ) {
-        score += 1;
-      }
-    });
-
-    const percentage =
-      attemptedQuestions > 0
-        ? Math.round((score / attemptedQuestions) * 100)
-        : 0;
-
-    return {
-      score,
-      totalQuestions,
-      attemptedQuestions,
-      percentage,
-      isExcellent: percentage >= 80,
-      isGood: percentage >= 60,
-    };
-  }, [questions]);
+  // Calculate stats using utility function
+  const stats = useMemo(() => calculateStats(questions), [questions]);
 
   // Bottom sheet ref and snap points
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ['25%', '50%', '90%'], []);
 
   // Callbacks
   const handleSheetChanges = useCallback(
@@ -121,12 +194,12 @@ const ResultsBottomSheet = ({
     <BottomSheet
       ref={bottomSheetRef}
       index={isVisible ? 0 : -1}
-      snapPoints={snapPoints}
+      snapPoints={SNAP_POINTS}
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
-      handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
+      backgroundStyle={{ backgroundColor: '#1F1B24' }}
+      handleIndicatorStyle={{ backgroundColor: '#6b7280' }}
     >
       <BottomSheetView className="flex-1 px-6">
         <Card className="mb-8 bg-secondary/30">
@@ -161,6 +234,12 @@ const ResultsBottomSheet = ({
                 {stats.score}
               </Text>
               <Text className="text-muted-foreground text-xs">Correct</Text>
+            </View>
+            <View className="flex-1 items-center">
+              <Text className="text-2xl font-bold text-red-500 mb-1">
+                {stats.incorrectCount}
+              </Text>
+              <Text className="text-muted-foreground text-xs">Incorrect</Text>
             </View>
             <View className="flex-1 items-center">
               <Text className="text-2xl font-bold text-primary mb-1">
@@ -201,9 +280,7 @@ const ResultsBottomSheet = ({
         <Button
           variant="outline"
           className="flex-1 border-primary"
-          onPress={() => {
-            handleMarkAsCompleted();
-          }}
+          onPress={handleMarkAsCompleted}
         >
           <Text className="font-bold text-center text-primary">
             Mark as Completed
@@ -331,17 +408,181 @@ const QuestionCard = React.memo(
   },
 );
 
+const CollapsibleQuestionCard = React.memo(
+  ({ question, questionIndex, handleOptionSelect }) => {
+    const [internalUserAnswer, setInternalUserAnswer] = useState(
+      question?.userAnswer,
+    );
+    const [isExpanded, setIsExpanded] = useState(false);
+    const animatedHeight = useSharedValue(0);
+    const chevronRotation = useSharedValue(0);
+
+    // Sync internal state with prop
+    useEffect(() => {
+      setInternalUserAnswer(question?.userAnswer);
+    }, [question?.userAnswer]);
+
+    const isAnswered = typeof internalUserAnswer === 'number';
+    const isCorrect = isAnswered && internalUserAnswer === question?.answer;
+
+    const toggleExpanded = () => {
+      setIsExpanded(!isExpanded);
+      animatedHeight.value = withTiming(isExpanded ? 0 : 1, {
+        duration: ANIMATION_DURATION,
+      });
+      chevronRotation.value = withTiming(isExpanded ? 0 : 180, {
+        duration: ANIMATION_DURATION,
+      });
+    };
+
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        maxHeight: interpolate(
+          animatedHeight.value,
+          [0, 1],
+          [0, 1000],
+          Extrapolation.CLAMP,
+        ),
+        opacity: animatedHeight.value,
+      };
+    });
+
+    const chevronStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ rotate: `${chevronRotation.value}deg` }],
+      };
+    });
+
+    return (
+      <Card className="rounded-2xl">
+        <TouchableOpacity onPress={toggleExpanded}>
+          <CardHeader className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-primary text-sm font-semibold uppercase tracking-wide">
+                    Question {questionIndex + 1}
+                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    {isAnswered && (
+                      <Badge
+                        variant={isCorrect ? 'success' : 'destructive'}
+                        className="rounded-full px-2 py-1"
+                      >
+                        <Text>{isCorrect ? 'Correct' : 'Incorrect'}</Text>
+                      </Badge>
+                    )}
+                    <Animated.View style={chevronStyle}>
+                      <ChevronDown size={20} color="#6b7280" />
+                    </Animated.View>
+                  </View>
+                </View>
+                <Text className="text-xl font-medium text-foreground mt-1">
+                  {question?.question}
+                </Text>
+              </View>
+            </View>
+          </CardHeader>
+        </TouchableOpacity>
+
+        <Animated.View style={animatedStyle} className="overflow-hidden">
+          <CardContent>
+            <View className="gap-4">
+              {question?.options.map((option, optionIndex) => {
+                const isUserAnswer = internalUserAnswer === optionIndex;
+                const isCorrectAnswer = question?.answer === optionIndex;
+
+                let bgColor = 'bg-card';
+                let borderColor = 'border-border';
+                let textColor = 'text-foreground';
+
+                if (isAnswered) {
+                  if (isCorrectAnswer) {
+                    bgColor = 'bg-green-500/10';
+                    borderColor = 'border-green-500';
+                    textColor = 'text-green-500';
+                  } else if (isUserAnswer) {
+                    bgColor = 'bg-red-500/10';
+                    borderColor = 'border-red-500';
+                    textColor = 'text-red-500';
+                  }
+                }
+
+                return (
+                  <TouchableOpacity
+                    key={optionIndex}
+                    onPress={() => {
+                      if (!isAnswered) {
+                        setInternalUserAnswer(optionIndex); // Immediate visual update
+                        handleOptionSelect(questionIndex, optionIndex); // Propagate to parent
+                      }
+                    }}
+                    disabled={isAnswered}
+                  >
+                    <View
+                      className={`relative p-4 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
+                    >
+                      <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mr-4">
+                        <Text className="text-sm font-bold text-muted-foreground">
+                          {String.fromCharCode(65 + optionIndex)}
+                        </Text>
+                      </View>
+                      <Text className={`flex-1 text-base ${textColor}`}>
+                        {option}
+                      </Text>
+                      {isAnswered && (isUserAnswer || isCorrectAnswer) && (
+                        <Badge
+                          variant="secondary"
+                          className="absolute -right-0 -top-0"
+                        >
+                          <Text className="text-xs">
+                            {isUserAnswer ? 'Your Answer' : 'Correct Answer'}
+                          </Text>
+                        </Badge>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Explanation section - shown after answering */}
+              {isAnswered && (
+                <View className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <Text className="text-sm font-medium text-primary">
+                    Explanation:
+                  </Text>
+                  <Text className="text-sm text-muted-foreground mt-1">
+                    {question?.explanation}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </CardContent>
+        </Animated.View>
+      </Card>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if the question object or index changes
+    return (
+      prevProps.question === nextProps.question &&
+      prevProps.questionIndex === nextProps.questionIndex
+    );
+  },
+);
+
 const OptionsBottomSheet = ({
   isVisible,
   onClose,
   onClearProgress,
   onMarkAsCompleted,
   setIsDrawerVisible,
-  handleToggleFilterBar, // TOGGLE HANDLER
-  showFilterBar, // STATE
+  handleToggleFilterBar,
+  showFilterBar,
+  handleToggleAccordionView,
+  showAccordionView,
 }) => {
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ['20%', '35%'], []);
   const [showAlert, setShowAlert] = useState(false);
 
   const handleSheetChanges = useCallback(
@@ -373,73 +614,76 @@ const OptionsBottomSheet = ({
     }
   }, [isVisible]);
 
+  const optionButtons = [
+    {
+      icon: BarChart2,
+      text: 'View Progress',
+      onPress: () => {
+        setIsDrawerVisible(true);
+        onClose();
+      },
+    },
+    {
+      icon: Check,
+      text: 'Mark as Completed',
+      onPress: () => {
+        onMarkAsCompleted();
+        onClose();
+      },
+    },
+    {
+      icon: FilterIcon,
+      text: showFilterBar ? 'Hide Filters' : 'Show Filters',
+      onPress: () => {
+        handleToggleFilterBar();
+        onClose();
+      },
+    },
+    {
+      icon: List,
+      text: showAccordionView ? 'Normal View' : 'Accordion View',
+      onPress: () => {
+        handleToggleAccordionView();
+        onClose();
+      },
+    },
+    {
+      icon: Repeat,
+      text: 'Reattempt',
+      onPress: () => setShowAlert(true),
+    },
+    {
+      icon: X,
+      text: 'Close',
+      onPress: onClose,
+    },
+  ];
+
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={isVisible ? 0 : -1}
-      snapPoints={snapPoints}
+      snapPoints={OPTIONS_SNAP_POINTS}
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#1F1B24' }} // bg-secondary
-      handleIndicatorStyle={{ backgroundColor: '#6b7280' }} // text-muted-foreground
+      backgroundStyle={{ backgroundColor: '#1F1B24' }}
+      handleIndicatorStyle={{ backgroundColor: '#6b7280' }}
     >
       <BottomSheetView className="flex-1 px-6 py-4">
-        {/* <Text className="text-2xl font-bold text-center text-primary mb-6">
-          Options
-        </Text> */}
-        <TouchableOpacity
-          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
-          onPress={() => setShowAlert(true)}
-        >
-          <Repeat size={20} color='white' className="mr-2" />
-          <Text className="text-primary text-lg font-semibold">
-            Reattempt
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
-          onPress={() => {
-            onMarkAsCompleted();
-            onClose();
-          }}
-        >
-          <Check size={20} color='white' className="mr-2" />
-          <Text className="text-primary text-lg font-semibold">
-            Mark as Completed
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
-          onPress={() => {
-            setIsDrawerVisible(true); // Assuming this opens the progress sheet
-            onClose();
-          }}
-        >
-          <BarChart2 size={20} color='white' className="mr-2" />
-          <Text className="text-primary text-lg font-semibold">
-            View Progress
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30"
-          onPress={onClose}
-        >
-          <X size={20} color='white' className="mr-2" />
-          <Text className="text-primary text-lg font-semibold">Close</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
-          onPress={() => {
-            handleToggleFilterBar();
-            onClose();
-          }}
-        >
-          <FilterIcon size={20} color='white' className="mr-2" />
-          <Text className="text-primary text-lg font-semibold">
-            {showFilterBar ? 'Hide Filters' : 'Show Filters'}
-          </Text>
-        </TouchableOpacity>
+        {optionButtons.map((button, index) => (
+          <TouchableOpacity
+            key={button.text}
+            className="flex-row items-center justify-center p-4 gap-2 rounded-xl bg-secondary/30 mb-4"
+            onPress={button.onPress}
+          >
+            <button.icon size={20} color="white" className="mr-2" />
+            <Text className="text-primary text-lg font-semibold">
+              {button.text}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
         <CustomAlertDialog
           visible={showAlert}
           onCancel={() => setShowAlert(false)}
@@ -458,31 +702,157 @@ const OptionsBottomSheet = ({
   );
 };
 
-const FILTERS = [
-  { label: 'All', value: 'all' },
-  { label: 'Correct', value: 'correct' },
-  { label: 'Incorrect', value: 'incorrect' },
-  { label: 'Unattempted', value: 'unattempted' },
-];
+// Extracted components
+const LoadingOverlay = ({ isVisible }) => {
+  if (!isVisible) return null;
+
+  return (
+    <View className="absolute inset-0 bg-background/80 z-50 items-center justify-center">
+      <View className="bg-card p-6 rounded-xl shadow-lg">
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text className="text-primary text-lg font-semibold mt-4 text-center">
+          Switching View...
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const FilterBar = ({ showFilterBar, selectedFilter, onFilterChange }) => {
+  if (!showFilterBar) return null;
+
+  return (
+    <View className="w-full px-6">
+      <View className="flex-row items-center justify-between gap-2 mb-2">
+        {FILTERS.map(f => (
+          <Button
+            key={f.value}
+            variant={selectedFilter === f.value ? 'default' : 'outline'}
+            size="sm"
+            className={selectedFilter === f.value ? 'border-primary' : ''}
+            onPress={() => onFilterChange(f.value)}
+          >
+            <Text
+              className={
+                selectedFilter === f.value
+                  ? 'text-primary-foreground font-bold'
+                  : 'text-primary'
+              }
+            >
+              {f.label}
+            </Text>
+          </Button>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const HeaderCard = ({ topic, prompt }) => (
+  <Card className="mb-6">
+    <CardHeader>
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1">
+          <CardTitle className="text-2xl font-bold text-foreground mb-1">
+            {topic}
+          </CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            {prompt}
+          </CardDescription>
+        </View>
+      </View>
+    </CardHeader>
+  </Card>
+);
+
+const ActionButtons = ({
+  onProgressPress,
+  onGenerateQuestions,
+  generateMoreQuestionsStatus,
+  questionBookId,
+  dispatch,
+}) => (
+  <View className="mt-4 gap-4">
+    <Button onPress={onProgressPress} variant="secondary" className="flex-1">
+      <Text className="text-lg font-bold text-center text-primary">
+        Progress 📊
+      </Text>
+    </Button>
+    <Button
+      variant="outline"
+      className="flex-1"
+      onPress={() => dispatch(generateMoreQuestions(questionBookId))}
+      disabled={generateMoreQuestionsStatus === 'loading'}
+    >
+      {generateMoreQuestionsStatus === 'loading' ? (
+        <View className="flex-row items-center justify-center">
+          <ActivityIndicator color="#007AFF" />
+          <Text className="text-primary text-lg font-semibold">
+            Generating...
+          </Text>
+        </View>
+      ) : (
+        <Text className="font-bold text-center text-primary">
+          More Questions 📚
+        </Text>
+      )}
+    </Button>
+  </View>
+);
+
+const EmptyState = ({ selectedFilter }) => {
+  const isFiltered = selectedFilter !== 'all';
+
+  return (
+    <View className="flex-1 items-center justify-center py-16">
+      {isFiltered ? (
+        <>
+          <AlertCircle size={60} color="#6b7280" />
+          <Text className="text-muted-foreground text-lg text-center mt-4">
+            No questions match your filter.
+          </Text>
+          <Text className="text-muted-foreground text-sm text-center mt-2">
+            Try changing your filter or clear it to see all questions.
+          </Text>
+        </>
+      ) : (
+        <>
+          <BookOpen size={60} color="#6b7280" />
+          <Text className="text-muted-foreground text-lg text-center mt-4">
+            No questions found in this book.
+          </Text>
+          <Text className="text-muted-foreground text-sm text-center mt-2">
+            Please add some questions to get started.
+          </Text>
+        </>
+      )}
+    </View>
+  );
+};
 
 const QuestionBook = ({ route }) => {
   const { questionBookId } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {
-    currentQuestionBook,
-    fetchCurrentQuestionBookStatus,
-  } = useSelector(state => state.questionBook);
+  const { currentQuestionBook, fetchCurrentQuestionBookStatus } = useSelector(
+    state => state.questionBook,
+  );
+  const { generateMoreQuestionsStatus } = useSelector(state => state.topic);
+
+  // State management
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [questions, setQuestions] = useState([]);
-  const questionsRef = useRef([]);
-  const currentQuestionBookRef = useRef(null);
-  const hasChangesRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { generateMoreQuestionsStatus } = useSelector(state => state.topic);
   const [isOptionsDrawerVisible, setIsOptionsDrawerVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showFilterBar, setShowFilterBar] = useState(false);
+  const [showAccordionView, setShowAccordionView] = useState(false);
+  const [isViewTransitioning, setIsViewTransitioning] = useState(false);
+
+  // Refs
+  const questionsRef = useRef([]);
+  const currentQuestionBookRef = useRef(null);
+  const hasChangesRef = useRef(false);
 
   // Handle back button press
   useEffect(() => {
@@ -504,8 +874,8 @@ const QuestionBook = ({ route }) => {
   }, [isDrawerVisible, isOptionsDrawerVisible]);
 
   useEffect(() => {
-      dispatch(fetchCurrentQuestionBook(questionBookId));
-  }, [ dispatch, questionBookId]);
+    dispatch(fetchCurrentQuestionBook(questionBookId));
+  }, [dispatch, questionBookId]);
 
   useEffect(() => {
     if (currentQuestionBook) {
@@ -520,7 +890,10 @@ const QuestionBook = ({ route }) => {
         // Merge userAnswer into new questions if available
         return currentQuestionBook?.questions?.map(q => ({
           ...q,
-          userAnswer: prevAnswers[q._id] !== undefined ? prevAnswers[q._id] : q.userAnswer,
+          userAnswer:
+            prevAnswers[q._id] !== undefined
+              ? prevAnswers[q._id]
+              : q.userAnswer,
         }));
       });
       questionsRef.current = currentQuestionBook.questions;
@@ -571,7 +944,7 @@ const QuestionBook = ({ route }) => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
-          <EllipsisVertical size={24} color='white' />
+          <EllipsisVertical size={24} color="white" />
         </TouchableOpacity>
       ),
     });
@@ -627,21 +1000,7 @@ const QuestionBook = ({ route }) => {
 
   // Filtered questions based on selected filter
   const filteredQuestions = useMemo(() => {
-    if (selectedFilter === 'all') return questions;
-    if (selectedFilter === 'correct') {
-      return questions.filter(
-        q => typeof q.userAnswer === 'number' && q.userAnswer === q.answer
-      );
-    }
-    if (selectedFilter === 'incorrect') {
-      return questions.filter(
-        q => typeof q.userAnswer === 'number' && q.userAnswer !== q.answer
-      );
-    }
-    if (selectedFilter === 'unattempted') {
-      return questions.filter(q => q.userAnswer === undefined);
-    }
-    return questions;
+    return filterQuestions(questions, selectedFilter);
   }, [questions, selectedFilter]);
 
   // Handler to toggle filter bar and reset filter if hiding
@@ -652,65 +1011,72 @@ const QuestionBook = ({ route }) => {
     });
   };
 
+  // Handler to toggle accordion view
+  const handleToggleAccordionView = () => {
+    setIsViewTransitioning(true);
+    setTimeout(() => {
+      setShowAccordionView(prev => !prev);
+      setIsViewTransitioning(false);
+    }, ANIMATION_DURATION); // Match the animation duration
+  };
+
   // Show skeleton loading when fetching data
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <ScrollView className="flex-1">
-          <View className="px-4 py-4">
-            {/* Header Card Skeleton */}
-            <Card className="mb-6">
-              <CardHeader>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <Skeleton className="h-6 w-32 mb-2" />
-                    <Skeleton className="h-4 w-full mb-1" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </View>
-                  <Skeleton className="h-10 w-20 ml-4" />
+        <View className="px-4 py-4">
+          {/* Header Card Skeleton */}
+          <Card className="mb-6">
+            <CardHeader>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-full mb-1" />
+                  <Skeleton className="h-4 w-3/4" />
                 </View>
-              </CardHeader>
-            </Card>
-
-            {/* Questions Skeleton */}
-            <View className="gap-6">
-              {[1, 2].map(index => (
-                <Card className="rounded-2xl" key={index}>
-                  <CardHeader className="gap-3">
-                    <View className="flex-row items-center justify-between">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-6 w-16" />
-                    </View>
-                    <Skeleton className="h-6 w-full mb-2" />
-                    <Skeleton className="h-5 w-3/4" />
-                  </CardHeader>
-
-                  <CardContent>
-                    <View className="gap-4">
-                      {[1, 2, 3, 4].map(optionIndex => (
-                        <View
-                          key={optionIndex}
-                          className="p-4 rounded-xl border-2 border-border"
-                        >
-                          <View className="flex-row items-center">
-                            <Skeleton className="w-8 h-8 rounded-full mr-4" />
-                            <Skeleton className="flex-1 h-5" />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {/* Action Buttons Skeleton */}
-              <View className="mt-4 gap-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-10 w-20 ml-4" />
               </View>
+            </CardHeader>
+          </Card>
+
+          {/* Questions Skeleton */}
+          <View className="gap-6">
+            {[1, 2].map(index => (
+              <Card className="rounded-2xl" key={index}>
+                <CardHeader className="gap-3">
+                  <View className="flex-row items-center justify-between">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-16" />
+                  </View>
+                  <Skeleton className="h-6 w-full mb-2" />
+                  <Skeleton className="h-5 w-3/4" />
+                </CardHeader>
+
+                <CardContent>
+                  <View className="gap-4">
+                    {[1, 2, 3, 4].map(optionIndex => (
+                      <View
+                        key={optionIndex}
+                        className="p-4 rounded-xl border-2 border-border"
+                      >
+                        <View className="flex-row items-center">
+                          <Skeleton className="w-8 h-8 rounded-full mr-4" />
+                          <Skeleton className="flex-1 h-5" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Action Buttons Skeleton */}
+            <View className="mt-4 gap-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </View>
           </View>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     );
   }
@@ -719,96 +1085,96 @@ const QuestionBook = ({ route }) => {
     <SafeAreaView className="flex-1 bg-background">
       <StatusBar barStyle="light-content" />
       {/* Filter UI - at the very top, with icon */}
-      <View className="w-full flex-row items-center justify-center">
-        {showFilterBar && (
-          <View className="flex-row items-center gap-2">
-            {FILTERS.map(f => (
-              <Button
-                key={f.value}
-                variant={selectedFilter === f.value ? 'default' : 'outline'}
-                size="sm"
-                className={selectedFilter === f.value ? 'border-primary' : ''}
-                onPress={() => setSelectedFilter(f.value)}
-              >
-                <Text className={selectedFilter === f.value ? 'text-primary-foreground font-bold' : 'text-primary'}>
-                  {f.label}
-                </Text>
-              </Button>
-            ))}
-          </View>
-        )}
-      </View>
+      <FilterBar
+        showFilterBar={showFilterBar}
+        selectedFilter={selectedFilter}
+        onFilterChange={setSelectedFilter}
+      />
       <View className="flex-1">
-        <FlatList
-          data={filteredQuestions}
-          keyExtractor={(item, index) =>
-            item._id ? item._id : index.toString()
-          }
-          renderItem={({ item, index }) => (
-            <QuestionCard
-              question={item}
-              questionIndex={questions.indexOf(item)}
-              handleOptionSelect={handleOptionSelect}
-            />
-          )}
-          initialNumToRender={7}
-          maxToRenderPerBatch={10}
-          windowSize={14}
-          removeClippedSubviews={true}
-          extraData={questions}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 32,
-            gap: 24,
-          }}
-          ListHeaderComponent={
-            <Card className="mb-6">
-              <CardHeader>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <CardTitle className="text-2xl font-bold text-foreground mb-1">{currentQuestionBook?.topic}</CardTitle>
-                    <CardDescription className="text-base text-muted-foreground">{currentQuestionBook?.prompt}</CardDescription>
-                  </View>
-                </View>
-              </CardHeader>
-            </Card>
-          }
-          ListFooterComponent={
-            <View className="mt-4 gap-4">
-              <Button
-                onPress={() => setIsDrawerVisible(true)}
-                variant="secondary"
-                className="flex-1"
-              >
-                <Text className="text-lg font-bold text-center text-primary">
-                  Progress 📊
-                </Text>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onPress={() => {
-                  dispatch(generateMoreQuestions(questionBookId));
-                }}
-                disabled={generateMoreQuestionsStatus === 'loading'}
-              >
-                {generateMoreQuestionsStatus === 'loading' ? (
-                  <View className="flex-row items-center justify-center">
-                    <ActivityIndicator color="#007AFF" />
-                    <Text className="text-primary text-lg font-semibold">
-                      Generating...
-                    </Text>
-                  </View>
-                ) : (
-                  <Text className="font-bold text-center text-primary">
-                    More Questions 📚
-                  </Text>
-                )}
-              </Button>
-            </View>
-          }
-        />
+        {isViewTransitioning && (
+          <LoadingOverlay isVisible={isViewTransitioning} />
+        )}
+        {filteredQuestions?.length === 0 ? (
+          <EmptyState selectedFilter={selectedFilter} />
+        ) : showAccordionView ? (
+          <FlatList
+            data={filteredQuestions}
+            keyExtractor={(item, index) =>
+              item._id ? item._id : index.toString()
+            }
+            renderItem={({ item, index }) => (
+              <CollapsibleQuestionCard
+                question={item}
+                questionIndex={questions.indexOf(item)}
+                handleOptionSelect={handleOptionSelect}
+              />
+            )}
+            {...FLATLIST_CONFIG}
+            extraData={questions}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+              gap: 24,
+            }}
+            ListHeaderComponent={
+              <HeaderCard
+                topic={currentQuestionBook?.topic}
+                prompt={currentQuestionBook?.prompt}
+              />
+            }
+            ListFooterComponent={
+              <ActionButtons
+                onProgressPress={() => setIsDrawerVisible(true)}
+                onGenerateQuestions={() =>
+                  dispatch(generateMoreQuestions(questionBookId))
+                }
+                generateMoreQuestionsStatus={generateMoreQuestionsStatus}
+                questionBookId={questionBookId}
+                dispatch={dispatch}
+              />
+            }
+          />
+        ) : (
+          <FlatList
+            data={filteredQuestions}
+            keyExtractor={(item, index) =>
+              item._id ? item._id : index.toString()
+            }
+            renderItem={({ item, index }) => (
+              <QuestionCard
+                question={item}
+                questionIndex={questions.indexOf(item)}
+                handleOptionSelect={handleOptionSelect}
+              />
+            )}
+            {...FLATLIST_CONFIG}
+            extraData={questions}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+              gap: 24,
+            }}
+            ListHeaderComponent={
+              <HeaderCard
+                topic={currentQuestionBook?.topic}
+                prompt={currentQuestionBook?.prompt}
+              />
+            }
+            ListFooterComponent={
+              <ActionButtons
+                onProgressPress={() => setIsDrawerVisible(true)}
+                onGenerateQuestions={() =>
+                  dispatch(generateMoreQuestions(questionBookId))
+                }
+                generateMoreQuestionsStatus={generateMoreQuestionsStatus}
+                questionBookId={questionBookId}
+                dispatch={dispatch}
+              />
+            }
+          />
+        )}
       </View>
 
       {/* Results Bottom Sheet */}
@@ -828,6 +1194,8 @@ const QuestionBook = ({ route }) => {
         setIsDrawerVisible={setIsDrawerVisible}
         handleToggleFilterBar={handleToggleFilterBar} // PASS DOWN TOGGLE HANDLER
         showFilterBar={showFilterBar} // PASS STATE
+        handleToggleAccordionView={handleToggleAccordionView} // PASS DOWN TOGGLE HANDLER
+        showAccordionView={showAccordionView} // PASS STATE
       />
     </SafeAreaView>
   );
