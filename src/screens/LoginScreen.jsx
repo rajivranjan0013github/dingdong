@@ -6,7 +6,6 @@ import {
 import React, { useState } from 'react';
 import { API_URL } from '../constants/config.js';
 //import inappicon from '../constants/inappicon.png';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   TouchableOpacity,
@@ -17,6 +16,8 @@ import {
   Image,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { googleLoginSignUp } from '../redux/slices/userSlice';
+import { useDispatch } from 'react-redux';
 
 async function platformSpecificSignUp() {
   try {
@@ -65,19 +66,41 @@ async function platformSpecificSignUp() {
   }
 }
 
-function Login({ onLogin }) {
+function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const handleSignIn = async () => {
     try {
       setIsLoading(true);
-      const credential = await platformSpecificSignUp();
+      if (Platform.OS === 'android') {
+        const googleCredential = await signUpWithGoogle({
+          serverClientId:
+            '545625865420-95ut16at09ds28eb7o0bum7dgmdug8uf.apps.googleusercontent.com',
+          autoSelectEnabled: false,
+        });
+        const result = await dispatch(
+          googleLoginSignUp(googleCredential.idToken),
+        );
+      } else {
+        // iOS: Apple Sign In
+        const appleCredential = await signUpWithApple({
+          nonce: 'OPTIONAL_NONCE_FOR_SECURITY',
+          requestedScopes: ['fullName', 'email'],
+        });
 
-      // Persist user credential
-      await AsyncStorage.setItem('user', JSON.stringify(credential?.user));
-      console.log(typeof onLogin);
-
-      onLogin(credential?.user);
+        return {
+          type: 'apple',
+          token: appleCredential.idToken,
+          id: appleCredential.id,
+          user: {
+            name: appleCredential.displayName,
+            givenName: appleCredential.givenName,
+            familyName: appleCredential.familyName,
+            email: appleCredential.email,
+          },
+        };
+      }
     } catch (error) {
       console.error('Sign-in failed', error);
     } finally {

@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.6",
-    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native/new-app-screen": "0.80.1",
     "@react-navigation/drawer": "^7.5.3",
     "@react-navigation/native": "^7.1.14",
@@ -30,6 +29,7 @@
     "react-native": "0.80.1",
     "react-native-credentials-manager": "^0.6.2",
     "react-native-gesture-handler": "^2.27.2",
+    "react-native-mmkv": "^3.3.0",
     "react-native-reanimated": "^3.19.0",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.12.0",

@@ -1,7 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  StatusBar,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../utils/MMKVStorage';
 import { logout } from '../redux/slices/userSlice';
 
 const ProfileScreen = () => {
@@ -15,7 +22,7 @@ const ProfileScreen = () => {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('user');
+          await storage.delete('user');
           dispatch(logout());
         },
       },

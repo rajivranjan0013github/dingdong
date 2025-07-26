@@ -1,7 +1,7 @@
 // AppNavigator.js
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../utils/MMKVStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../redux/slices/userSlice';
 
@@ -15,7 +15,7 @@ const MainNavigator = () => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const savedUser = await AsyncStorage.getItem('user');
+      const savedUser = storage.getString('user');
       if (savedUser) dispatch(setUser(JSON.parse(savedUser)));
       setIsLoading(false);
     };
@@ -24,9 +24,7 @@ const MainNavigator = () => {
 
   if (isLoading) return null;
 
-  return (<>
-      {isLoggedIn ? <AppNavigator /> : <AuthNavigator />}
-  </>);
+  return <>{isLoggedIn ? <AppNavigator /> : <AuthNavigator />}</>;
 };
 
 export default MainNavigator;

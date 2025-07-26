@@ -36,6 +36,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
+    console.log('fetching topics');
     dispatch(fetchTopics({ skip: 0, limit: 10 }));
   }, [dispatch]);
 
@@ -47,8 +48,8 @@ const HomeScreen = () => {
 
   const handleGenerateQuiz = async () => {
     try {
-      dispatch(setCurrentQuestionBook(null)); // Clear previous question book before generating a new one
       navigation.navigate('GeneratingQuiz'); // Navigate to the loading screen
+      dispatch(setCurrentQuestionBook(null)); // Clear previous question book before generating a new one
       await dispatch(generateTopic(topic));
       setTopic('');
       Toast.success('Topic generated successfully!');
@@ -58,8 +59,8 @@ const HomeScreen = () => {
   };
 
   const handleTopicSelect = (recentTopic) => {
-    dispatch(setCurrentQuestionBook(recentTopic));
     navigation.navigate('QuestionBook', { questionBookId: recentTopic._id });
+    dispatch(setCurrentQuestionBook(recentTopic));
   };
 
   // Filter recent topics based on search query
@@ -99,7 +100,7 @@ const HomeScreen = () => {
           </Text>
         </Button>
 
-        <Text className="text-2xl font-bold mt-4">Recent Topics</Text>
+        <Text className="text-2xl font-bold mt-4">Recent Topics</Text>|
       </View>
 
       {/* Topics List - Takes remaining height */}
