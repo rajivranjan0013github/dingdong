@@ -14,6 +14,7 @@ import GeneratingQuizScreen from '../screens/GeneratingQuizScreen';
 import QuestionBook from '../screens/QuestionBook';
 import ProfileScreen from '../screens/ProfileScreen';
 import UserInitialsBadge from './UserInitialsBadge';
+import DemoScreen from '../screens/DemoScreen';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -55,6 +56,7 @@ const AppNavigator = () => {
       {!isLoggedIn && (
         <Stack.Screen name="Login">{props => <LoginScreen />}</Stack.Screen>
       )}
+         <Stack.Screen name="Demo" component={DemoScreen} options={{headerShown: false}}/>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="QuizResult" component={QuizResultScreen} />
@@ -66,7 +68,8 @@ const AppNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} />
+      <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} options={{headerShown: false}}/>
+   
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
