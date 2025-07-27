@@ -7,6 +7,7 @@ import {
   StatusBar,
   FlatList,
   ActivityIndicator,
+  ToastAndroid,
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
@@ -52,15 +53,15 @@ const HomeScreen = () => {
       dispatch(setCurrentQuestionBook(null)); // Clear previous question book before generating a new one
       await dispatch(generateTopic(topic));
       setTopic('');
-      Toast.success('Topic generated successfully!');
+      ToastAndroid.show('Topic generated successfully!', ToastAndroid.SHORT);
     } catch (error) {
-      Toast.error('Failed to generate topic. Please try again.');
+      ToastAndroid.show('Failed to generate topic. Please try again.', ToastAndroid.SHORT);
     }
   };
 
   const handleTopicSelect = (recentTopic) => {
     navigation.navigate('QuestionBook', { questionBookId: recentTopic._id });
-    dispatch(setCurrentQuestionBook(recentTopic));
+    // dispatch(setCurrentQuestionBook(recentTopic));
   };
 
   // Filter recent topics based on search query
@@ -69,7 +70,7 @@ const HomeScreen = () => {
         recentTopic?.topic?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : recentTopics;
-  console.log('filteredTopics', filteredTopics);
+  // console.log('filteredTopics', filteredTopics);
 
   return (
     <SafeAreaView className="flex-1 bg-background px-5">

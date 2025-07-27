@@ -10,13 +10,13 @@ const GeneratingQuizScreen = () => {
   const { generateTopicStatus } = useSelector(state => state.topic);
   const { currentQuestionBook } = useSelector(state => state.questionBook);
 
-  useEffect(() => {
-    if (generateTopicStatus === 'succeeded' && currentQuestionBook?._id) {
-      navigation.replace('QuestionBook', { questionBookId: currentQuestionBook._id });
-    } else if (generateTopicStatus === 'failed') {
-      navigation.navigate('Home');
-    }
-  }, [generateTopicStatus, currentQuestionBook, navigation]);
+  // useEffect(() => {
+  //   if (generateTopicStatus === 'succeeded' && currentQuestionBook?._id) {
+  //     navigation.replace('QuestionBook', { questionBookId: currentQuestionBook._id });
+  //   } else if (generateTopicStatus === 'failed') {
+  //     navigation.navigate('Home');
+  //   }
+  // }, [generateTopicStatus, currentQuestionBook, navigation]);
 
   return (
     <SafeAreaView className="flex-1 bg-background justify-center items-center">
