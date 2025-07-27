@@ -99,7 +99,7 @@ const HomeScreen = () => {
           </Text>
         </Button>
 
-        <Text className="text-2xl font-bold mt-4">Recent Topics</Text>|
+        <Text className="text-2xl font-bold mt-4">Recent Topics</Text>
       </View>
 
       <View className="flex-1">
