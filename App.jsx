@@ -15,6 +15,16 @@ export default function App() {
   const theme = colorScheme === 'dark' ? 'dark' : 'light';
   const [isAppReady, setIsAppReady] = useState(false);
 
+  const linking = {
+    prefixes: ['https://linkserver-delta.vercel.app'],
+    config: {
+      screens: {
+        Demo: 'Demo/:url',
+        Profile: 'Profile',
+      },
+    },
+  };
+
   useEffect(() => {
     // Initialize app and wait for everything to be ready
     const initializeApp = async () => {
@@ -53,8 +63,8 @@ export default function App() {
       <Provider store={store}>
         {/* <ThemeProvider value={navTheme}> */}
           <StatusBar barStyle={'light-content'} />
-          <NavigationContainer>
-          <MainNavigator />
+          <NavigationContainer linking={linking}>
+            <MainNavigator />
           </NavigationContainer>
       </Provider>
       <ToastManager config={{

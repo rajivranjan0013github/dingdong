@@ -80,7 +80,7 @@ const AppNavigator = () => {
         }}
       />
       <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} options={{headerShown: false}}/>
-   
+      <Stack.Screen name="Demo" component={DemoScreen} options={{headerShown: false}}/>
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
