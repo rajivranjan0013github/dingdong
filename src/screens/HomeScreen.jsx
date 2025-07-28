@@ -290,9 +290,9 @@ const HomeScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
       
       {/* Header */}
-      <View className="px-5  pb-2">
+      {/* <View className="px-5  pb-2">
         <Text className="text-2xl font-bold">Recent Topics</Text>
-      </View>
+      </View> */}
 
       {/* Topics List */}
       <View className="flex-1 px-5">

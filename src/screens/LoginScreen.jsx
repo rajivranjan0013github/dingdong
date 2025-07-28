@@ -145,11 +145,11 @@ function Login() {
             </View>
           
           <Text className="text-3xl font-bold text-foreground mb-2">
-            Welcome
+            TopicWise
           </Text>
           
           <Text className="text-lg text-muted-foreground text-center">
-            Sign in to continue to Questionaire
+            Please sign in to continue to TopicWise
           </Text>
         </View>
 

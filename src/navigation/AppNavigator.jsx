@@ -1,6 +1,7 @@
 // navigators/AppNavigator.js
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Image } from 'react-native';
 import { storage } from '../utils/MMKVStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser, logout } from '../redux/slices/userSlice';
@@ -56,7 +57,18 @@ const AppNavigator = () => {
       {!isLoggedIn && (
         <Stack.Screen name="Login">{props => <LoginScreen />}</Stack.Screen>
       )}
-      <Stack.Screen name="Home" component={HomeScreen} options={{title: ''}}/>
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{
+          headerTitle: () => (
+            <Image
+              source={require('../assets/topicwise2.png')}
+              style={{ width: 150, height: 35, resizeMode: 'fit', marginLeft: -20, marginTop: 10 }}
+            />
+          ),
+        }}
+      />
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="QuizResult" component={QuizResultScreen} />
       <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />

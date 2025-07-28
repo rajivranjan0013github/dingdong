@@ -5,6 +5,7 @@
     android:background="@color/primary_dark">
     
     <FrameLayout
+        android:id="@+id/launch_image_container"
         android:layout_width="160dp"
         android:layout_height="160dp"
         android:layout_centerInParent="true"
@@ -19,5 +20,16 @@
             android:adjustViewBounds="true" />
             
     </FrameLayout>
+    
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/launch_image_container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="4dp"
+        android:text="TopicWise"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:textStyle="bold" />
         
 </RelativeLayout>
