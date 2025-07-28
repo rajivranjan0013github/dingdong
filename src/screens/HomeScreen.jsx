@@ -379,11 +379,11 @@ const HomeScreen = () => {
       <View className="bg-background px-2 py-3">
         <View className="flex-row items-end ">
           {/* Input Container */}
-          {/* <View className="flex-1 bg-secondary rounded-3xl min-h-[44px] max-h-[120px] px-4 py-2 mr-2 justify-center border border-border">
+          <View className="flex-1 bg-secondary rounded-3xl min-h-[44px] max-h-[120px] px-4 py-2 mr-2 justify-center border border-border">
             <TextInput
               value={topic}
               onChangeText={setTopic}
-              placeholder="Describe a topic to generate questions"
+              placeholder="Generate questions from any topic"
               placeholderTextColor="#A0A0B2"
               multiline
               textAlignVertical="center"
@@ -399,41 +399,9 @@ const HomeScreen = () => {
               onSubmitEditing={handleGenerateQuiz}
               blurOnSubmit={false}
             />
-          </View> */}
+          </View>
 
-<View 
-  className="flex-1 bg-secondary rounded-3xl min-h-[44px] max-h-[120px] px-4 py-2 mr-2 justify-center border border-border"
-  style={{
-    shadowColor: '#ffffff', // or any color you prefer
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 1,
-    elevation: 5, 
-  }}
->
-  <TextInput
-    value={topic}
-    onChangeText={setTopic}
-    placeholder="Describe a topic to generate questions"
-    placeholderTextColor="#A0A0B2"
-    multiline
-    textAlignVertical="center"
-    style={{
-      fontSize: 16,
-      lineHeight: 20,
-      maxHeight: 100,
-      paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-      color: '#fff',
-    }}
-    className="text-foreground"
-    returnKeyType="send"
-    onSubmitEditing={handleGenerateQuiz}
-    blurOnSubmit={false}
-  />
-</View>
+
 
           <TouchableOpacity
             onPress={handleGenerateQuiz}
