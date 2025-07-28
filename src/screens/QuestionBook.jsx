@@ -76,7 +76,7 @@ const FLATLIST_CONFIG = {
   removeClippedSubviews: true,
 };
 
-const SNAP_POINTS = ['25%', '50%', '90%'];
+const SNAP_POINTS = ['25%', '70%'];
 const OPTIONS_SNAP_POINTS = ['20%', '35%'];
 
 // Utility functions
@@ -205,41 +205,26 @@ const ResultsBottomSheet = ({
         <Card className="mb-8 bg-secondary/30">
           <CardHeader>
             <CardTitle className="text-3xl text-center">
-              Progress Summary 📊
+              Progress Summary
             </CardTitle>
           </CardHeader>
         </Card>
 
-        {/* Score Circle */}
-        <View className="items-center mb-8">
-          <View
-            className={`w-40 h-40 rounded-full border-4 items-center justify-center bg-secondary
-            ${stats.isExcellent ? 'border-green-500' : stats.isGood ? 'border-yellow-500' : 'border-red-500'}`}
-          >
-            <Text
-              className={`text-4xl font-bold 
-              ${stats.isExcellent ? 'text-green-500' : stats.isGood ? 'text-yellow-500' : 'text-red-500'}`}
-            >
-              {stats.percentage}%
-            </Text>
-            <Text className="text-muted-foreground text-sm mt-1">Progress</Text>
-          </View>
-        </View>
-
         {/* Stats */}
         <Card className="mb-8 bg-secondary/30 border-primary">
-          <CardContent className="flex-row justify-between py-6">
-            <View className="flex-1 items-center">
-              <Text className="text-2xl font-bold text-primary mb-1">
-                {stats.score}
-              </Text>
-              <Text className="text-muted-foreground text-xs">Correct</Text>
-            </View>
+          <CardContent className="flex-row-reverse justify-between py-6">
+            
             <View className="flex-1 items-center">
               <Text className="text-2xl font-bold text-red-500 mb-1">
                 {stats.incorrectCount}
               </Text>
               <Text className="text-muted-foreground text-xs">Incorrect</Text>
+            </View>
+            <View className="flex-1 items-center">
+              <Text className="text-2xl font-bold text-primary mb-1">
+                {stats.score}
+              </Text>
+              <Text className="text-muted-foreground text-xs">Correct</Text>
             </View>
             <View className="flex-1 items-center">
               <Text className="text-2xl font-bold text-primary mb-1">
@@ -279,7 +264,7 @@ const ResultsBottomSheet = ({
         </Card>
         <Button
           variant="outline"
-          className="flex-1 border-primary"
+          className="flex-1 border-primary bg-background/90"
           onPress={handleMarkAsCompleted}
         >
           <Text className="font-bold text-center text-primary">
@@ -749,16 +734,13 @@ const FilterBar = ({ showFilterBar, selectedFilter, onFilterChange }) => {
 };
 
 const HeaderCard = ({ topic, prompt }) => (
-  <Card className="mb-6">
-    <CardHeader>
+  <Card className="p-0 border-0 shadow-none">
+    <CardHeader className="p-[2px] border-border">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <CardTitle className="text-2xl font-bold text-foreground mb-1">
             {topic}
           </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            {prompt}
-          </CardDescription>
         </View>
       </View>
     </CardHeader>
@@ -775,7 +757,7 @@ const ActionButtons = ({
   <View className="mt-4 gap-4">
     <Button onPress={onProgressPress} variant="secondary" className="flex-1">
       <Text className="text-lg font-bold text-center text-primary">
-        Progress 📊
+        Progress
       </Text>
     </Button>
     <Button
@@ -793,7 +775,7 @@ const ActionButtons = ({
         </View>
       ) : (
         <Text className="font-bold text-center text-primary">
-          More Questions 📚
+          More Questions ??
         </Text>
       )}
     </Button>
@@ -928,11 +910,15 @@ const QuestionBook = ({ route }) => {
     }
   };
 
+  console.log('isLoading', isLoading);
+  
+
   // Set the loading state to false when the current question book is fetched
   useEffect(() => {
     const timer = setTimeout(() => {
       if (fetchCurrentQuestionBookStatus === 'succeeded') {
         setIsLoading(false);
+        console.log('load-end', isLoading);
       }
     }, 300);
 
@@ -1152,7 +1138,7 @@ const QuestionBook = ({ route }) => {
             extraData={questions}
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingTop: 16,
+              paddingTop: 0,
               paddingBottom: 32,
               gap: 24,
             }}

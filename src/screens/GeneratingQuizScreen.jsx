@@ -23,7 +23,7 @@ const GeneratingQuizScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
       <ActivityIndicator size="large" color="white" />
       <Text className="text-foreground text-xl font-semibold mt-5 text-center px-4">
-        Generating your personalized quiz...
+        Generating Questions...
       </Text>
       <Text className="text-muted-foreground text-base mt-2 text-center px-4">
         This might take a moment based on the complexity of your topic.

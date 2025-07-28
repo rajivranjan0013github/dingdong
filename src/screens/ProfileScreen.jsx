@@ -1,32 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Alert,
+  // Alert, // Commented out Alert since we are replacing it
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { storage } from '../utils/MMKVStorage';
 import { logout } from '../redux/slices/userSlice';
+import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.user);
+  const [isLogoutDialogVisible, setIsLogoutDialogVisible] = useState(false);
 
   const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await storage.delete('user');
-          dispatch(logout());
-        },
-      },
-    ]);
+    setIsLogoutDialogVisible(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLogoutDialogVisible(false);
+    await storage.delete('user');
+    dispatch(logout());
+  };
+
+  const handleCancelLogout = () => {
+    setIsLogoutDialogVisible(false);
   };
 
   return (
@@ -49,6 +51,16 @@ const ProfileScreen = () => {
           <Text style={styles.menuText}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      <CustomAlertDialog
+        visible={isLogoutDialogVisible}
+        onCancel={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmText="Logout"
+        cancelText="Cancel"
+      />
     </View>
   );
 };
