@@ -36,8 +36,8 @@ const AppNavigator = () => {
   }, []);
 
   if (isLoading) return null;
-  console.log('isLoggedIn', isLoggedIn);
-  console.log('user', user);
+  // console.log('isLoggedIn', isLoggedIn);
+  // console.log('user', user);
 
   return (
     <Stack.Navigator
@@ -72,6 +72,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="QuizResult" component={QuizResultScreen} />
       <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
+      <Stack.Screen name="Questions" component={DemoScreen}/>
       <Stack.Screen
         name="QuestionBook"
         component={QuestionBook}
@@ -80,7 +81,7 @@ const AppNavigator = () => {
         }}
       />
       <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} options={{headerShown: false}}/>
-      <Stack.Screen name="Demo" component={DemoScreen} options={{headerShown: false}}/>
+
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );

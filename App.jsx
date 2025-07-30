@@ -16,11 +16,12 @@ export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
 
   const linking = {
-    prefixes: ['https://linkserver-delta.vercel.app'],
+    prefixes: ['https://linkingserver.vercel.app'],
     config: {
       screens: {
-        Demo: 'Demo/:url',
-        Profile: 'Profile',
+        Questions: 'questions/:url',
+        Profile: 'profile',    
+        Quiz: 'quiz',
       },
     },
   };
