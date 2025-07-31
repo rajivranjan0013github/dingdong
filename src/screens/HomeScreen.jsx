@@ -42,7 +42,6 @@ const HomeScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    console.log('fetching topics');
     dispatch(fetchTopics({ skip: 0, limit: 10 }));
   }, [dispatch]);
 
@@ -56,7 +55,8 @@ const HomeScreen = () => {
           
           // Navigate to the target screen
           if (deepLinkData.screen === 'Questions') {
-            navigation.navigate('QuestionBook', { questionBookId: deepLinkData.url });
+            
+            navigation.navigate('QuestionBook', { questionBookId: deepLinkData.url, isDeepLink: true });
           } else if (deepLinkData.screen === 'Profile') {
             navigation.navigate('Profile');
           } else if (deepLinkData.screen === 'Quiz') {
@@ -78,7 +78,7 @@ const HomeScreen = () => {
     const deepLinkListener = DeviceEventEmitter.addListener(DEEP_LINK_EVENT, (deepLinkData) => {
       // Navigate immediately when deep link is received
       if (deepLinkData.screen === 'Questions') {
-        navigation.navigate('QuestionBook', { questionBookId: deepLinkData.url });
+        navigation.navigate('QuestionBook', { questionBookId: deepLinkData.url, isDeepLink: true });
       } else if (deepLinkData.screen === 'Profile') {
         navigation.navigate('Profile');
       } else if (deepLinkData.screen === 'Quiz') {

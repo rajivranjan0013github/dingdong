@@ -50,6 +50,7 @@ import {
   ChevronDown,
   BookOpen,
   AlertCircle,
+  Share2,
 } from 'lucide-react-native';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 import Animated, {
@@ -753,6 +754,7 @@ const ActionButtons = ({
   generateMoreQuestionsStatus,
   questionBookId,
   dispatch,
+  isDeepLink,
 }) => (
   <View className="mt-4 gap-4">
     <Button onPress={onProgressPress} variant="secondary" className="flex-1">
@@ -760,25 +762,27 @@ const ActionButtons = ({
         Progress
       </Text>
     </Button>
-    <Button
-      variant="outline"
-      className="flex-1"
-      onPress={() => dispatch(generateMoreQuestions(questionBookId))}
-      disabled={generateMoreQuestionsStatus === 'loading'}
-    >
-      {generateMoreQuestionsStatus === 'loading' ? (
-        <View className="flex-row items-center justify-center">
-          <ActivityIndicator color="#007AFF" />
-          <Text className="text-primary text-lg font-semibold">
-            Generating...
+    {!isDeepLink && (
+      <Button
+        variant="outline"
+        className="flex-1"
+        onPress={() => dispatch(generateMoreQuestions(questionBookId))}
+        disabled={generateMoreQuestionsStatus === 'loading'}
+      >
+        {generateMoreQuestionsStatus === 'loading' ? (
+          <View className="flex-row items-center justify-center">
+            <ActivityIndicator color="#007AFF" />
+            <Text className="text-primary text-lg font-semibold">
+              Generating...
+            </Text>
+          </View>
+        ) : (
+          <Text className="font-bold text-center text-primary">
+            More Questions ??
           </Text>
-        </View>
-      ) : (
-        <Text className="font-bold text-center text-primary">
-          More Questions ??
-        </Text>
-      )}
-    </Button>
+        )}
+      </Button>
+    )}
   </View>
 );
 
@@ -813,7 +817,7 @@ const EmptyState = ({ selectedFilter }) => {
 };
 
 const QuestionBook = ({ route }) => {
-  const { questionBookId } = route.params;
+  const { questionBookId, isDeepLink } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { currentQuestionBook, fetchCurrentQuestionBookStatus } = useSelector(
@@ -862,6 +866,14 @@ const QuestionBook = ({ route }) => {
   useEffect(() => {
     if (currentQuestionBook) {
       setQuestions(prevQuestions => {
+        // For deep links, don't set any initial answers
+        if (isDeepLink) {
+          return currentQuestionBook?.questions?.map(q => ({
+            ...q,
+            userAnswer: undefined, // Clear any existing answers for deep links
+          }));
+        }
+        
         // Create a map of previous answers by question _id
         const prevAnswers = {};
         prevQuestions?.forEach(q => {
@@ -882,7 +894,7 @@ const QuestionBook = ({ route }) => {
       currentQuestionBookRef.current = currentQuestionBook;
       hasChangesRef.current = false; // Reset changes flag when new data is loaded
     }
-  }, [currentQuestionBook]);
+  }, [currentQuestionBook, isDeepLink]);
 
   // Update ref whenever questions change
   useEffect(() => {
@@ -904,9 +916,13 @@ const QuestionBook = ({ route }) => {
           questions: questionsRef.current,
           questionBookId: currentQuestionBookRef.current._id,
           status: allQuestionsAnswered ? 'completed' : 'pending',
+          deepLink: isDeepLink,
         }),
-      );
-      ToastAndroid.show('Your response has been saved!', ToastAndroid.SHORT);
+      ).unwrap().then(data => {
+        ToastAndroid.show('Your response has been saved!', ToastAndroid.SHORT);
+      }).catch(error => {
+        ToastAndroid.show('Failed to save your response!', ToastAndroid.SHORT);
+      });
     }
   };
 
@@ -915,7 +931,6 @@ const QuestionBook = ({ route }) => {
     const timer = setTimeout(() => {
       if (fetchCurrentQuestionBookStatus === 'succeeded') {
         setIsLoading(false);
-        console.log('load-end', isLoading);
       }
     }, 300);
 
@@ -926,9 +941,14 @@ const QuestionBook = ({ route }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
-          <EllipsisVertical size={24} color="white" />
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-2">
+            <TouchableOpacity onPress={() => navigation.navigate('Demo', { url: 'https://www.google.com' })}>
+            <Share2 size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
+            <EllipsisVertical size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation]);
@@ -1115,6 +1135,7 @@ const QuestionBook = ({ route }) => {
                 generateMoreQuestionsStatus={generateMoreQuestionsStatus}
                 questionBookId={questionBookId}
                 dispatch={dispatch}
+                isDeepLink={isDeepLink}
               />
             }
           />
@@ -1154,6 +1175,7 @@ const QuestionBook = ({ route }) => {
                 generateMoreQuestionsStatus={generateMoreQuestionsStatus}
                 questionBookId={questionBookId}
                 dispatch={dispatch}
+                isDeepLink={isDeepLink}
               />
             }
           />

@@ -61,7 +61,6 @@ const userSlice = createSlice({
         // Handle pending state if needed
       })
       .addCase(googleLoginSignUp.fulfilled, (state, action) => {
-        console.log('action.payload', action.payload);
         state.user = action.payload.user;
         state.isLoggedIn = !!action.payload;
         storage.set('user', JSON.stringify(action.payload.user));

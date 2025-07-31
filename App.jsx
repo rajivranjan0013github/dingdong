@@ -7,7 +7,6 @@ import { StatusBar, useColorScheme, View, Linking } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ToastManager, { SuccessToast, ErrorToast, InfoToast, WarnToast } from 'toastify-react-native';
 import SplashScreen from 'react-native-splash-screen';
 import { storage } from './src/utils/MMKVStorage';
 import { DeviceEventEmitter } from 'react-native';
@@ -119,13 +118,6 @@ export default function App() {
             <MainNavigator />
           </NavigationContainer>
       </Provider>
-      <ToastManager config={{
-        success: (props) => <SuccessToast {...props} theme={theme} />,
-        error: (props) => <ErrorToast {...props} theme={theme} />,
-        info: (props) => <InfoToast {...props} theme={theme} />,
-        warn: (props) => <WarnToast {...props} theme={theme} />,
-        default: (props) => <InfoToast {...props} theme={theme} />,
-      }} />
     </GestureHandlerRootView>
   );
 }
