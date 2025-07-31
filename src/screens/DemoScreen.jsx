@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 
 const DemoScreen = ({route}) => {
   const {url} = route.params;
+
   return (
     <View>
       <Text>Demo Screen</Text>

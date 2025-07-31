@@ -3,28 +3,79 @@ import "./global.css"
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import MainNavigator from './src/navigation/MainNavigator';
-import { StatusBar, useColorScheme, View } from 'react-native';
+import { StatusBar, useColorScheme, View, Linking } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ToastManager, { SuccessToast, ErrorToast, InfoToast, WarnToast } from 'toastify-react-native';
 import SplashScreen from 'react-native-splash-screen';
+import { storage } from './src/utils/MMKVStorage';
+import { DeviceEventEmitter } from 'react-native';
+
+// Custom event for deep link notifications
+export const DEEP_LINK_EVENT = 'DEEP_LINK_RECEIVED';
 
 export default function App() {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? 'dark' : 'light';
   const [isAppReady, setIsAppReady] = useState(false);
 
-  const linking = {
-    prefixes: ['https://linkingserver.vercel.app'],
-    config: {
-      screens: {
-        Questions: 'questions/:url',
-        Profile: 'profile',    
-        Quiz: 'quiz',
-      },
-    },
-  };
+  useEffect(() => {
+    // Handle deep links when app is running
+    const handleDeepLink = (event) => {
+      const url = event.url;
+      if (url.includes('linkingserver.vercel.app')) {
+        const urlParts = url.split('/');
+        if (urlParts.includes('questions')) {
+          const urlIndex = urlParts.indexOf('questions');
+          const questionUrl = urlParts[urlIndex + 1];
+          const deepLinkData = {
+            screen: 'Questions',
+            url: questionUrl,
+            timestamp: Date.now()
+          };
+          storage.set('pendingDeepLink', JSON.stringify(deepLinkData));
+          // Emit event to notify HomeScreen
+          DeviceEventEmitter.emit(DEEP_LINK_EVENT, deepLinkData);
+        } else if (urlParts.includes('profile')) {
+          const deepLinkData = {
+            screen: 'Profile',
+            timestamp: Date.now()
+          };
+          storage.set('pendingDeepLink', JSON.stringify(deepLinkData));
+          DeviceEventEmitter.emit(DEEP_LINK_EVENT, deepLinkData);
+        } else if (urlParts.includes('quiz')) {
+          const deepLinkData = {
+            screen: 'Quiz',
+            timestamp: Date.now()
+          };
+          storage.set('pendingDeepLink', JSON.stringify(deepLinkData));
+          DeviceEventEmitter.emit(DEEP_LINK_EVENT, deepLinkData);
+        }
+      }
+    };
+
+    // Handle initial URL when app starts
+    const getInitialURL = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          handleDeepLink({ url: initialUrl });
+        }
+      } catch (error) {
+        console.error('Error getting initial URL:', error);
+      }
+    };
+
+    getInitialURL();
+
+    // Listen for deep links when app is running
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   useEffect(() => {
     // Initialize app and wait for everything to be ready
@@ -64,7 +115,7 @@ export default function App() {
       <Provider store={store}>
         {/* <ThemeProvider value={navTheme}> */}
           <StatusBar barStyle={'light-content'} />
-          <NavigationContainer linking={linking}>
+          <NavigationContainer>
             <MainNavigator />
           </NavigationContainer>
       </Provider>
