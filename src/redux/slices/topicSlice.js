@@ -24,7 +24,6 @@ export const fetchTopics = createAsyncThunk(
   'topic/fetchTopics',
   async ({ skip = 0, limit = 10 } = {}) => {
     const jwt = storage.getString('jwt');
-    console.log('jwt', jwt);
     const response = await fetch(
       `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
       {
@@ -38,7 +37,6 @@ export const fetchTopics = createAsyncThunk(
       throw new Error('Failed to fetch topics');
     }
     const data = await response.json();
-    console.log('data', data);
     return { ...data, skip, limit };
   },
 );
@@ -69,7 +67,6 @@ export const generateTopic = createAsyncThunk(
   'topic/generateTopic',
   async (topic, { dispatch }) => {
     const jwt = storage.getString('jwt');
-    console.log('jwt', jwt);
     const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
       method: 'POST',
       headers: {
@@ -82,7 +79,6 @@ export const generateTopic = createAsyncThunk(
       throw new Error('Failed to generate topic');
     }
     const data = await response.json();
-    console.log('data', data);
     dispatch(setCurrentQuestionBook(data?.data));
     return data.data;
   },
@@ -92,7 +88,6 @@ export const generateMoreQuestions = createAsyncThunk(
   'topic/generateMoreQuestions',
   async (questionBookId, { dispatch, getState }) => {
     const jwt = storage.getString('jwt');
-    console.log('jwt', jwt);
     const response = await fetch(`${API_URL}/api/topic/more-questions`, {
       method: 'POST',
       headers: {
@@ -129,6 +124,8 @@ const topicSlice = createSlice({
           ...state.topics[topicIndex],
           ...newTopic,
         };
+      } else {
+        state.topics.unshift(newTopic);
       }
     },
     resetTopics: state => {
@@ -176,13 +173,11 @@ const topicSlice = createSlice({
       })
       .addCase(generateTopic.fulfilled, (state, action) => {
         state.generateTopicStatus = 'succeeded';
-        console.log('action.payload', action.payload);
         state.topics.unshift(action.payload);
       })
       .addCase(generateTopic.rejected, (state, action) => {
         state.generateTopicStatus = 'failed';
         state.error = action.error.message;
-        console.log(action.error);
       })
       .addCase(generateMoreQuestions.pending, state => {
         state.generateMoreQuestionsStatus = 'loading';
@@ -190,7 +185,6 @@ const topicSlice = createSlice({
       .addCase(generateMoreQuestions.fulfilled, (state, action) => {
         state.generateMoreQuestionsStatus = 'succeeded';
         const updatedQuestionBook = action.payload;
-        console.log('updatedQuestionBook', updatedQuestionBook);
 
         // Find the topic that contains this question book
         const topicIndex = state.topics.findIndex(
@@ -204,7 +198,6 @@ const topicSlice = createSlice({
       .addCase(generateMoreQuestions.rejected, (state, action) => {
         state.generateMoreQuestionsStatus = 'failed';
         state.error = action.error.message;
-        console.log(action.error);
       });
   },
 });

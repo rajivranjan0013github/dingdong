@@ -11,7 +11,6 @@ const AuthNavigator = () => {
 
     const handleLogin = (user) => {
         dispatch(setUser(user));
-        console.log('user', user);
       };
     
 

@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { API_URL } from '../../constants/config';
 import { updateTopic } from './topicSlice';
+import { storage } from '../../utils/MMKVStorage';
 
 export const fetchCurrentQuestionBook = createAsyncThunk(
   'questionBook/fetchCurrentQuestionBook',
@@ -19,10 +20,12 @@ export const fetchCurrentQuestionBook = createAsyncThunk(
 export const updateCurrentQuestionBook = createAsyncThunk(
   'questionBook/updateCurrentQuestionBook',
   async (questionBook, { dispatch }) => {
+    const jwt = storage.getString('jwt');
     const response = await fetch(`${API_URL}/api/question`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
       },
       body: JSON.stringify(questionBook),
     });
@@ -31,6 +34,7 @@ export const updateCurrentQuestionBook = createAsyncThunk(
       throw new Error('Failed to update question book');
     }
     const data = await response.json();
+    
     dispatch(updateTopic(data));
     return data;
   },

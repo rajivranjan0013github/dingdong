@@ -26,7 +26,6 @@ const AppNavigator = () => {
   useEffect(() => {
     const loadUser = async () => {
       const savedUser = storage.getString('user');
-      console.log('savedUser', savedUser);
       if (savedUser) {
         dispatch(setUser(JSON.parse(savedUser)));
       }
@@ -35,9 +34,7 @@ const AppNavigator = () => {
     loadUser();
   }, []);
 
-  if (isLoading) return null;
-  // console.log('isLoggedIn', isLoggedIn);
-  // console.log('user', user);
+    if (isLoading) return null;
 
   return (
     <Stack.Navigator

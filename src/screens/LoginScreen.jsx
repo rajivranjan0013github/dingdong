@@ -42,7 +42,6 @@ async function platformSpecificSignUp() {
         }),
       });
       const data = await ans.json();
-      // console.log(data);
       return data;
     } else {
       // iOS: Apple Sign In
