@@ -12,7 +12,7 @@ import { storage } from '../utils/MMKVStorage';
 import { logout } from '../redux/slices/userSlice';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.user);
   const [isLogoutDialogVisible, setIsLogoutDialogVisible] = useState(false);
@@ -47,6 +47,20 @@ const ProfileScreen = () => {
       {user?.email && <Text style={styles.email}>{user.email}</Text>}
 
       <View style={styles.menu}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+        >
+          <Text style={styles.menuText}>Privacy Policy</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('TermsOfService')}
+        >
+          <Text style={styles.menuText}>Terms of Service</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Text style={styles.menuText}>Logout</Text>
         </TouchableOpacity>

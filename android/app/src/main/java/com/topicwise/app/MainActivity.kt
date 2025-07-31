@@ -1,4 +1,4 @@
-package com.question2
+package com.topicwise.app
 
 import android.content.Intent
 import android.os.Bundle
@@ -26,7 +26,7 @@ class MainActivity : ReactActivity() {
    * Returns the name of the main component registered from JavaScript.
    * This is used to schedule rendering of the component.
    */
-  override fun getMainComponentName(): String = "question2"
+  override fun getMainComponentName(): String = "topicwise.app"
 
   /**
    * Returns the instance of the [ReactActivityDelegate].

@@ -14,6 +14,8 @@ import QuizAnalysisScreen from '../screens/QuizAnalysisScreen';
 import GeneratingQuizScreen from '../screens/GeneratingQuizScreen';
 import QuestionBook from '../screens/QuestionBook';
 import ProfileScreen from '../screens/ProfileScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import UserInitialsBadge from './UserInitialsBadge';
 
 const Stack = createNativeStackNavigator();
@@ -54,14 +56,20 @@ const AppNavigator = () => {
       {!isLoggedIn && (
         <Stack.Screen name="Login">{props => <LoginScreen />}</Stack.Screen>
       )}
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
         options={{
           headerTitle: () => (
             <Image
               source={require('../assets/topicwise2.png')}
-              style={{ width: 150, height: 35, resizeMode: 'fit', marginLeft: -20, marginTop: 10 }}
+              style={{
+                width: 150,
+                height: 35,
+                resizeMode: 'fit',
+                marginLeft: -20,
+                marginTop: 10,
+              }}
             />
           ),
         }}
@@ -76,9 +84,15 @@ const AppNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen name="GeneratingQuiz" component={GeneratingQuizScreen} options={{headerShown: false}}/>
+      <Stack.Screen
+        name="GeneratingQuiz"
+        component={GeneratingQuizScreen}
+        options={{ headerShown: false }}
+      />
 
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
     </Stack.Navigator>
   );
 };

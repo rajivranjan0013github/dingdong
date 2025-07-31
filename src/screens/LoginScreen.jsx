@@ -69,7 +69,7 @@ async function platformSpecificSignUp() {
   }
 }
 
-function Login() {
+function Login({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
@@ -106,7 +106,7 @@ function Login() {
       }
     } catch (error) {
       // console.error('Sign-in failed', error);
-      ToastAndroid.show('Sign-in failed', ToastAndroid.SHORT);  
+      ToastAndroid.show('Sign-in failed', ToastAndroid.SHORT);
     } finally {
       setIsLoading(false);
     }
@@ -115,38 +115,38 @@ function Login() {
   return (
     <SafeAreaView className="flex-1 bg-background/95">
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
-      
+
       <View className="flex-1 justify-center px-8">
         {/* Logo and Title */}
-                  <View className="items-center mb-10">
-            <View 
-              className="w-32 h-32 items-center justify-center mb-6 border-2 border-border rounded-3xl"
+        <View className="items-center mb-10">
+          <View
+            className="w-32 h-32 items-center justify-center mb-6 border-2 border-border rounded-3xl"
+            style={{
+              shadowColor: '#FFFFFF',
+              shadowOffset: {
+                width: 0,
+                height: 0,
+              },
+              shadowOpacity: 1,
+              shadowRadius: 80,
+              elevation: 60,
+              backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            }}
+          >
+            <Image
+              source={require('../assets/app-icon.png')}
               style={{
-                shadowColor: '#FFFFFF',
-                shadowOffset: {
-                  width: 0,
-                  height: 0,
-                },
-                shadowOpacity: 1,
-                shadowRadius: 80,
-                elevation: 60,
-                backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                width: 120,
+                height: 120,
               }}
-            >
-              <Image 
-                source={require('../assets/app-icon.png')}
-                style={{ 
-                  width: 120, 
-                  height: 120,
-                }}
-                resizeMode="contain"
-              />
-            </View>
-          
+              resizeMode="contain"
+            />
+          </View>
+
           <Text className="text-3xl font-bold text-foreground mb-2">
             TopicWise
           </Text>
-          
+
           <Text className="text-lg text-muted-foreground text-center">
             Please sign in to continue to TopicWise
           </Text>
@@ -164,7 +164,11 @@ function Login() {
             <View className="flex-row items-center justify-center w-full">
               {isLoading ? (
                 <View className="flex-row items-center justify-center w-full">
-                  <ActivityIndicator size="small" color="#007AFF" style={{ marginRight: 16 }} />
+                  <ActivityIndicator
+                    size="small"
+                    color="#007AFF"
+                    style={{ marginRight: 16 }}
+                  />
                   <Text className="text-foreground font-bold text-lg">
                     Signing in...
                   </Text>
@@ -192,7 +196,9 @@ function Login() {
                     </Svg>
                   </View>
                   <Text className="text-foreground font-bold text-lg">
-                    {Platform.OS === 'ios' ? 'Sign in with Apple' : 'Sign in with Google'}
+                    {Platform.OS === 'ios'
+                      ? 'Sign in with Apple'
+                      : 'Sign in with Google'}
                   </Text>
                 </>
               )}
@@ -203,7 +209,20 @@ function Login() {
         {/* Footer */}
         <View className="items-center">
           <Text className="text-muted-foreground text-center text-sm">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            By signing in, you agree to our{' '}
+            <Text
+              className="text-blue-400 underline"
+              onPress={() => navigation.navigate('TermsOfService')}
+            >
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text
+              className="text-blue-400 underline"
+              onPress={() => navigation.navigate('PrivacyPolicy')}
+            >
+              Privacy Policy
+            </Text>
           </Text>
         </View>
       </View>
