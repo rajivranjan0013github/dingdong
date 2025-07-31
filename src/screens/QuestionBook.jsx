@@ -910,9 +910,6 @@ const QuestionBook = ({ route }) => {
     }
   };
 
-  console.log('isLoading', isLoading);
-  
-
   // Set the loading state to false when the current question book is fetched
   useEffect(() => {
     const timer = setTimeout(() => {

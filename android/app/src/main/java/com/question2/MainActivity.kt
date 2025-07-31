@@ -1,5 +1,6 @@
 package com.question2
 
+import android.content.Intent
 import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -13,6 +14,12 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     SplashScreen.show(this) // ✅ shows the splash screen
     super.onCreate(savedInstanceState)
+  }
+
+  // ✅ Handle deep links when app is already running
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    setIntent(intent)
   }
 
   /**
