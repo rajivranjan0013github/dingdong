@@ -97,7 +97,8 @@ const TermsOfServiceScreen = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>8. Contact</Text>
             <Text style={styles.text}>
-              For any questions, please contact us at ayushkumarsanu00@gmail.com.
+              For any questions, please contact us at
+              ayushkumarsanu00@gmail.com.
             </Text>
           </View>
         </View>

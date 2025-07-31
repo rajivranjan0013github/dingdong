@@ -11,8 +11,7 @@ const PrivacyPolicyScreen = () => {
         <View style={styles.content}>
           <Text style={styles.title}>Privacy Policy</Text>
           <Text style={styles.effectiveDate}>
-            Effective Date: July 31, 2025
-            Last Updated: July 31, 2025
+            Effective Date: July 31, 2025 Last Updated: July 31, 2025
           </Text>
 
           <Text style={styles.intro}>

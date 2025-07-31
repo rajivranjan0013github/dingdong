@@ -22,6 +22,7 @@ export const googleLoginSignUp = createAsyncThunk(
       });
 
       const data = await response.json();
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Google login failed');
@@ -29,6 +30,7 @@ export const googleLoginSignUp = createAsyncThunk(
 
       return data;
     } catch (error) {
+      console.log(error);
       console.error('Google sign-up failed:', error);
       return rejectWithValue(error.message);
     }

@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useLayoutEffect,
 } from 'react';
+import Share from 'react-native-share';
 import {
   View,
   SafeAreaView,
@@ -937,12 +938,30 @@ const QuestionBook = ({ route }) => {
     return () => clearTimeout(timer);
   }, [currentQuestionBook]);
 
+  const shareContent = async (questionBookId) => {
+    const shareOptions = {
+      title: 'Share Question Book',
+      message: 'Check out this question book!',
+      url: `https://linkingserver.vercel.app/questions/${questionBookId}`,
+      type: 'text/plain',
+      failOnCancel: false,
+    };
+
+    try {
+      const result = await Share.open(shareOptions);  
+      console.log(result);
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+
   // Set the header right icon to the ellipsis icon
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View className="flex-row items-center gap-2">
-            <TouchableOpacity onPress={() => navigation.navigate('Demo', { url: 'https://www.google.com' })}>
+            <TouchableOpacity onPress={() => shareContent(questionBookId)}>
             <Share2 size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>
