@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   DeviceEventEmitter,
+  RefreshControl,
 } from 'react-native';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
@@ -39,6 +40,7 @@ const HomeScreen = () => {
     limit,
   } = useSelector(state => state.topic);
   const [topic, setTopic] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -107,6 +109,17 @@ const HomeScreen = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await dispatch(fetchTopics({ skip: 0, limit: 10 }));
+    } catch (error) {
+      console.error('Error refreshing topics:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleGenerateQuiz = async () => {
     if (!topic.trim()) return;
     
@@ -150,12 +163,20 @@ const HomeScreen = () => {
         ) : (
           <FlatList
             data={filteredTopics}
-            keyExtractor={item => item._id}
+            keyExtractor={(item, index) => `${item._id}-${index}`}
             initialNumToRender={5}
             maxToRenderPerBatch={5}
             windowSize={7}
             removeClippedSubviews={true}
             extraData={filteredTopics}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#888']}
+                tintColor="#888"
+              />
+            }
             renderItem={({ item: recentTopic }) => (
               <TouchableOpacity
                 className="bg-card border border-border rounded-lg p-4 mb-3 flex-row justify-between items-center"
