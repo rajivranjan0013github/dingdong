@@ -35,14 +35,12 @@ export const fetchTopics = createAsyncThunk(
           },
         },
       );
-      console.log(response);
       if (!response.ok) {
         throw new Error('Failed to fetch topics');
       }
       const data = await response.json();
       return { ...data, skip, limit };
     } catch (error) {
-      console.log(error);
       console.error('Error fetching topics:', error);
       throw new Error(error.message || 'Failed to fetch topics');
     }
@@ -81,7 +79,6 @@ export const generateTopic = createAsyncThunk(
   async (topic, { dispatch }) => {
     try {
       const jwt = storage.getString('jwt');
-      console.log(topic);
       const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
         method: 'POST',
         headers: {

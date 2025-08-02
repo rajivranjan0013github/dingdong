@@ -949,7 +949,6 @@ const QuestionBook = ({ route }) => {
 
     try {
       const result = await Share.open(shareOptions);  
-      console.log(result);
     } catch (error) {
       console.error('Error sharing:', error);
     }
