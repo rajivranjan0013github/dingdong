@@ -6,37 +6,45 @@ import { storage } from '../../utils/MMKVStorage';
 
 export const fetchCurrentQuestionBook = createAsyncThunk(
   'questionBook/fetchCurrentQuestionBook',
-  async id => {
-    const response = await fetch(`${API_URL}/api/question/${id}`);
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_URL}/api/question/${id}`);
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch questions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch questions');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch questions');
     }
-    const data = await response.json();
-    return data;
   },
 );
 
 export const updateCurrentQuestionBook = createAsyncThunk(
   'questionBook/updateCurrentQuestionBook',
-  async (questionBook, { dispatch }) => {
-    const jwt = storage.getString('jwt');
-    const response = await fetch(`${API_URL}/api/question`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: JSON.stringify(questionBook),
-    });
+  async (questionBook, { dispatch, rejectWithValue }) => {
+    try {
+      const jwt = storage.getString('jwt');
+      const response = await fetch(`${API_URL}/api/question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify(questionBook),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to update question book');
+      if (!response.ok) {
+        throw new Error('Failed to update question book');
+      }
+      const data = await response.json();
+
+      dispatch(updateTopic(data));
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to update question book');
     }
-    const data = await response.json();
-    
-    dispatch(updateTopic(data));
-    return data;
   },
 );
 

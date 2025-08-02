@@ -23,21 +23,29 @@ const initialState = {
 export const fetchTopics = createAsyncThunk(
   'topic/fetchTopics',
   async ({ skip = 0, limit = 10 } = {}) => {
-    const jwt = storage.getString('jwt');
-    const response = await fetch(
-      `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+    try {
+      const jwt = storage.getString('jwt');
+
+      const response = await fetch(
+        `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwt}`,
+          },
         },
-      },
-    );
-    if (!response.ok) {
-      throw new Error('Failed to fetch topics');
+      );
+      console.log(response);
+      if (!response.ok) {
+        throw new Error('Failed to fetch topics');
+      }
+      const data = await response.json();
+      return { ...data, skip, limit };
+    } catch (error) {
+      console.log(error);
+      console.error('Error fetching topics:', error);
+      throw new Error(error.message || 'Failed to fetch topics');
     }
-    const data = await response.json();
-    return { ...data, skip, limit };
   },
 );
 
@@ -45,66 +53,82 @@ export const fetchTopics = createAsyncThunk(
 export const fetchMoreTopics = createAsyncThunk(
   'topic/fetchMoreTopics',
   async ({ skip, limit }, { getState }) => {
-    const jwt = storage.getString('jwt');
-    const response = await fetch(
-      `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+    try {
+      const jwt = storage.getString('jwt');
+      const response = await fetch(
+        `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwt}`,
+          },
         },
-      },
-    );
-    if (!response.ok) {
-      throw new Error('Failed to fetch more topics');
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch more topics');
+      }
+      const data = await response.json();
+      return { ...data, skip, limit };
+    } catch (error) {
+      console.error('Error fetching more topics:', error);
+      throw new Error(error.message || 'Failed to fetch more topics');
     }
-    const data = await response.json();
-    return { ...data, skip, limit };
   },
 );
 
 export const generateTopic = createAsyncThunk(
   'topic/generateTopic',
   async (topic, { dispatch }) => {
-    const jwt = storage.getString('jwt');
-    const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: JSON.stringify({ topic }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to generate topic');
+    try {
+      const jwt = storage.getString('jwt');
+      console.log(topic);
+      const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ topic }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to generate topic');
+      }
+      const data = await response.json();
+      dispatch(setCurrentQuestionBook(data?.data));
+      return data.data;
+    } catch (error) {
+      console.error('Error generating topic:', error);
+      throw new Error(error.message || 'Failed to generate topic');
     }
-    const data = await response.json();
-    dispatch(setCurrentQuestionBook(data?.data));
-    return data.data;
   },
 );
 
 export const generateMoreQuestions = createAsyncThunk(
   'topic/generateMoreQuestions',
   async (questionBookId, { dispatch, getState }) => {
-    const jwt = storage.getString('jwt');
-    const response = await fetch(`${API_URL}/api/topic/more-questions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: JSON.stringify({
-        questionBookId,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to generate more questions');
-    }
-    const data = await response.json();
-    dispatch(setCurrentQuestionBook(data?.data));
+    try {
+      const jwt = storage.getString('jwt');
+      const response = await fetch(`${API_URL}/api/topic/more-questions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({
+          questionBookId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to generate more questions');
+      }
+      const data = await response.json();
+      dispatch(setCurrentQuestionBook(data?.data));
 
-    return data.data;
+      return data.data;
+    } catch (error) {
+      console.error('Error generating more questions:', error);
+      throw new Error(error.message || 'Failed to generate more questions');
+    }
   },
 );
 

@@ -17,7 +17,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import UserInitialsBadge from './UserInitialsBadge';
-import DemoScreen from '../screens/DemoScreen';
+
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -77,7 +77,6 @@ const AppNavigator = () => {
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="QuizResult" component={QuizResultScreen} />
       <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
-      <Stack.Screen name="Demo" component={DemoScreen} />
       <Stack.Screen
         name="QuestionBook"
         component={QuestionBook}
