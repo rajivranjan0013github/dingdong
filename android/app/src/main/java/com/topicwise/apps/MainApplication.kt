@@ -1,4 +1,4 @@
-package com.topicwise.app
+package com.topicwise.apps
 
 import android.app.Application
 import com.facebook.react.PackageList
