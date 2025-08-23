@@ -7,6 +7,7 @@ import React, {
   useLayoutEffect,
 } from 'react';
 import Share from 'react-native-share';
+// import './QuestionBook.css';
 import {
   View,
   SafeAreaView,
@@ -61,6 +62,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
+import { MathJaxSvg } from 'react-native-mathjax-html-to-svg';
 
 // Constants
 const FILTERS = [
@@ -215,7 +217,6 @@ const ResultsBottomSheet = ({
         {/* Stats */}
         <Card className="mb-8 bg-secondary/30 border-primary">
           <CardContent className="flex-row-reverse justify-between py-6">
-            
             <View className="flex-1 items-center">
               <Text className="text-2xl font-bold text-red-500 mb-1">
                 {stats.incorrectCount}
@@ -308,7 +309,12 @@ const QuestionCard = React.memo(
               </Badge>
             )}
           </View>
-          <CardTitle className="text-xl">{question?.question}</CardTitle>
+          {/* Question text with MathJax */}
+          <View className="mt-1">
+            <MathJaxSvg fontSize={20} color="#ffffff" fontCache>
+              {String(question?.question ?? '')}
+            </MathJaxSvg>
+          </View>
         </CardHeader>
 
         <CardContent>
@@ -319,19 +325,24 @@ const QuestionCard = React.memo(
 
               let bgColor = 'bg-card';
               let borderColor = 'border-border';
-              let textColor = 'text-foreground';
 
               if (isAnswered) {
                 if (isCorrectAnswer) {
                   bgColor = 'bg-green-500/10';
                   borderColor = 'border-green-500';
-                  textColor = 'text-green-500';
                 } else if (isUserAnswer) {
                   bgColor = 'bg-red-500/10';
                   borderColor = 'border-red-500';
-                  textColor = 'text-red-500';
                 }
               }
+
+              const optionTextColor = isAnswered
+                ? isCorrectAnswer
+                  ? '#22c55e'
+                  : isUserAnswer
+                    ? '#ef4444'
+                    : '#e5e7eb'
+                : '#e5e7eb';
 
               return (
                 <TouchableOpacity
@@ -352,9 +363,15 @@ const QuestionCard = React.memo(
                         {String.fromCharCode(65 + optionIndex)}
                       </Text>
                     </View>
-                    <Text className={`flex-1 text-base ${textColor}`}>
-                      {option}
-                    </Text>
+                    <View className="flex-1">
+                      <MathJaxSvg
+                        fontSize={16}
+                        color={optionTextColor}
+                        fontCache
+                      >
+                        {String(option ?? '')}
+                      </MathJaxSvg>
+                    </View>
                     {isAnswered && (isUserAnswer || isCorrectAnswer) && (
                       <Badge
                         variant="secondary"
@@ -376,9 +393,11 @@ const QuestionCard = React.memo(
                 <Text className="text-sm font-medium text-primary">
                   Explanation:
                 </Text>
-                <Text className="text-sm text-muted-foreground mt-1">
-                  {question?.explanation}
-                </Text>
+                <View className="mt-1">
+                  <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
+                    {String(question?.explanation ?? '')}
+                  </MathJaxSvg>
+                </View>
               </View>
             )}
           </View>
@@ -464,9 +483,12 @@ const CollapsibleQuestionCard = React.memo(
                     </Animated.View>
                   </View>
                 </View>
-                <Text className="text-xl font-medium text-foreground mt-1">
-                  {question?.question}
-                </Text>
+                {/* Question text with MathJax */}
+                <View className="mt-1">
+                  <MathJaxSvg fontSize={20} color="#ffffff" fontCache>
+                    {String(question?.question ?? '')}
+                  </MathJaxSvg>
+                </View>
               </View>
             </View>
           </CardHeader>
@@ -481,19 +503,24 @@ const CollapsibleQuestionCard = React.memo(
 
                 let bgColor = 'bg-card';
                 let borderColor = 'border-border';
-                let textColor = 'text-foreground';
 
                 if (isAnswered) {
                   if (isCorrectAnswer) {
                     bgColor = 'bg-green-500/10';
                     borderColor = 'border-green-500';
-                    textColor = 'text-green-500';
                   } else if (isUserAnswer) {
                     bgColor = 'bg-red-500/10';
                     borderColor = 'border-red-500';
-                    textColor = 'text-red-500';
                   }
                 }
+
+                const optionTextColor = isAnswered
+                  ? isCorrectAnswer
+                    ? '#22c55e'
+                    : isUserAnswer
+                      ? '#ef4444'
+                      : '#e5e7eb'
+                  : '#e5e7eb';
 
                 return (
                   <TouchableOpacity
@@ -514,9 +541,15 @@ const CollapsibleQuestionCard = React.memo(
                           {String.fromCharCode(65 + optionIndex)}
                         </Text>
                       </View>
-                      <Text className={`flex-1 text-base ${textColor}`}>
-                        {option}
-                      </Text>
+                      <View className="flex-1">
+                        <MathJaxSvg
+                          fontSize={16}
+                          color={optionTextColor}
+                          fontCache
+                        >
+                          {String(option ?? '')}
+                        </MathJaxSvg>
+                      </View>
                       {isAnswered && (isUserAnswer || isCorrectAnswer) && (
                         <Badge
                           variant="secondary"
@@ -538,9 +571,11 @@ const CollapsibleQuestionCard = React.memo(
                   <Text className="text-sm font-medium text-primary">
                     Explanation:
                   </Text>
-                  <Text className="text-sm text-muted-foreground mt-1">
-                    {question?.explanation}
-                  </Text>
+                  <View className="mt-1">
+                    <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
+                      {String(question?.explanation ?? '')}
+                    </MathJaxSvg>
+                  </View>
                 </View>
               )}
             </View>
@@ -874,7 +909,7 @@ const QuestionBook = ({ route }) => {
             userAnswer: undefined, // Clear any existing answers for deep links
           }));
         }
-        
+
         // Create a map of previous answers by question _id
         const prevAnswers = {};
         prevQuestions?.forEach(q => {
@@ -919,11 +954,20 @@ const QuestionBook = ({ route }) => {
           status: allQuestionsAnswered ? 'completed' : 'pending',
           deepLink: isDeepLink,
         }),
-      ).unwrap().then(data => {
-        ToastAndroid.show('Your response has been saved!', ToastAndroid.SHORT);
-      }).catch(error => {
-        ToastAndroid.show('Failed to save your response!', ToastAndroid.SHORT);
-      });
+      )
+        .unwrap()
+        .then(data => {
+          ToastAndroid.show(
+            'Your response has been saved!',
+            ToastAndroid.SHORT,
+          );
+        })
+        .catch(error => {
+          ToastAndroid.show(
+            'Failed to save your response!',
+            ToastAndroid.SHORT,
+          );
+        });
     }
   };
 
@@ -938,7 +982,7 @@ const QuestionBook = ({ route }) => {
     return () => clearTimeout(timer);
   }, [currentQuestionBook]);
 
-  const shareContent = async (questionBookId) => {
+  const shareContent = async questionBookId => {
     const shareOptions = {
       title: 'Share Question Book',
       message: 'Check out this question book!',
@@ -948,19 +992,18 @@ const QuestionBook = ({ route }) => {
     };
 
     try {
-      const result = await Share.open(shareOptions);  
+      const result = await Share.open(shareOptions);
     } catch (error) {
       console.error('Error sharing:', error);
     }
   };
-
 
   // Set the header right icon to the ellipsis icon
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View className="flex-row items-center gap-2">
-            <TouchableOpacity onPress={() => shareContent(questionBookId)}>
+          <TouchableOpacity onPress={() => shareContent(questionBookId)}>
             <Share2 size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsOptionsDrawerVisible(true)}>

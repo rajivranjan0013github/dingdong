@@ -1,10 +1,12 @@
 // navigators/AppNavigator.js
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Image } from 'react-native';
+import {  View } from 'react-native';
 import { storage } from '../utils/MMKVStorage';
+import Svg, { Path } from 'react-native-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser, logout } from '../redux/slices/userSlice';
+import Logo from '../components/customUI/Logo';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -61,16 +63,9 @@ const AppNavigator = () => {
         component={HomeScreen}
         options={{
           headerTitle: () => (
-            <Image
-              source={require('../assets/topicwise2.png')}
-              style={{
-                width: 150,
-                height: 35,
-                resizeMode: 'fit',
-                marginLeft: -20,
-                marginTop: 10,
-              }}
-            />
+          <View style={{ marginLeft: -20}}>
+            <Logo width={150} height={35} />
+          </View>
           ),
         }}
       />
