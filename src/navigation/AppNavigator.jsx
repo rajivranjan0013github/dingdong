@@ -1,12 +1,12 @@
 // navigators/AppNavigator.js
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {  View } from 'react-native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { View, TouchableOpacity } from 'react-native';
 import { storage } from '../utils/MMKVStorage';
-import Svg, { Path } from 'react-native-svg';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser, logout } from '../redux/slices/userSlice';
-import Logo from '../components/customUI/Logo';
+import { setUser } from '../redux/slices/userSlice';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -19,12 +19,58 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import UserInitialsBadge from './UserInitialsBadge';
+import CustomDrawerContent from './CustomDrawerContent';
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+
+const HomeStack = () => {
+  const { user } = useSelector(state => state.user);
+  
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerStyle: { backgroundColor: 'black' },
+        headerTintColor: 'white',
+        drawerStyle: {
+          backgroundColor: '#000',
+          width: '85%',
+        },
+      }}
+    >
+      <Drawer.Screen
+        name="Home"
+        component={HomeScreen}
+        options={({ navigation }) => ({
+          headerTitle: "",
+          headerStyle: {
+            backgroundColor: '#161717',
+          },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => navigation.openDrawer()}
+              style={{ marginLeft: 8, padding: 8 }}
+            >
+              <Icon name="menu" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <UserInitialsBadge
+              name={user?.name}
+              onPress={() => navigation.navigate('Profile')}
+              style={{ marginRight: 8 }}
+            />
+          ),
+        })}
+      />
+    </Drawer.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   const dispatch = useDispatch();
-  const { user, isLoggedIn } = useSelector(state => state.user);
+  const { isLoggedIn } = useSelector(state => state.user);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,56 +84,48 @@ const AppNavigator = () => {
     loadUser();
   }, []);
 
-    if (isLoading) return null;
+  if (isLoading) return null;
 
   return (
     <Stack.Navigator
-      screenOptions={({ navigation }) => ({
+      screenOptions={{
         headerStyle: { backgroundColor: 'black' },
         headerTintColor: 'white',
-        headerTitleStyle: { fontWeight: 'bold' },
-        headerRight: () =>
-          isLoggedIn && user?.name ? (
-            <UserInitialsBadge
-              name={user.name}
-              onPress={() => navigation.navigate('Profile')}
-            />
-          ) : null,
-      })}
+      }}
     >
-      {!isLoggedIn && (
-        <Stack.Screen name="Login">{props => <LoginScreen />}</Stack.Screen>
+      {!isLoggedIn ? (
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+      ) : (
+        <>
+          <Stack.Screen
+            name="HomeStack"
+            component={HomeStack}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="Quiz" component={QuizScreen} />
+          <Stack.Screen name="QuizResult" component={QuizResultScreen} />
+          <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
+          <Stack.Screen
+            name="QuestionBook"
+            component={QuestionBook}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="GeneratingQuiz"
+            component={GeneratingQuizScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+        </>
       )}
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          headerTitle: () => (
-          <View style={{ marginLeft: -20}}>
-            <Logo width={150} height={35} />
-          </View>
-          ),
-        }}
-      />
-      <Stack.Screen name="Quiz" component={QuizScreen} />
-      <Stack.Screen name="QuizResult" component={QuizResultScreen} />
-      <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
-      <Stack.Screen
-        name="QuestionBook"
-        component={QuestionBook}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="GeneratingQuiz"
-        component={GeneratingQuizScreen}
-        options={{ headerShown: false }}
-      />
-
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
     </Stack.Navigator>
   );
 };

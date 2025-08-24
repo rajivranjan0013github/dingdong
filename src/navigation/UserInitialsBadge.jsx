@@ -22,9 +22,9 @@ const UserInitialsBadge = ({ name, onPress }) => {
 
 const styles = StyleSheet.create({
   circle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#4a90e2',
     justifyContent: 'center',
     alignItems: 'center',

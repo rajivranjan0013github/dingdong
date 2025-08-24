@@ -295,9 +295,9 @@ const QuestionCard = React.memo(
 
     return (
       <Card className="rounded-2xl" key={questionIndex}>
-        <CardHeader className="gap-3">
+        <CardHeader className="gap-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-primary text-sm font-semibold uppercase tracking-wide">
+            <Text className="text-primary text-sm font-semibold uppercase tracking-wide opacity-70">
               Question {questionIndex + 1}
             </Text>
             {isAnswered && (
@@ -311,7 +311,7 @@ const QuestionCard = React.memo(
           </View>
           {/* Question text with MathJax */}
           <View className="mt-1">
-            <MathJaxSvg fontSize={20} color="#ffffff" fontCache>
+            <MathJaxSvg fontSize={17} color="#ffffff" fontCache>
               {String(question?.question ?? '')}
             </MathJaxSvg>
           </View>
@@ -358,14 +358,14 @@ const QuestionCard = React.memo(
                   <View
                     className={`relative p-4 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
                   >
-                    <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mr-4">
+                    <View className="w-6 h-6 rounded-full bg-muted items-center justify-center mr-4">
                       <Text className="text-sm font-bold text-muted-foreground">
                         {String.fromCharCode(65 + optionIndex)}
                       </Text>
                     </View>
                     <View className="flex-1">
                       <MathJaxSvg
-                        fontSize={16}
+                        fontSize={14}
                         color={optionTextColor}
                         fontCache
                       >
@@ -377,7 +377,7 @@ const QuestionCard = React.memo(
                         variant="secondary"
                         className="absolute -right-0 -top-0"
                       >
-                        <Text className="text-xs">
+                        <Text className="text-[10px]">
                           {isUserAnswer ? 'Your Answer' : 'Correct Answer'}
                         </Text>
                       </Badge>
