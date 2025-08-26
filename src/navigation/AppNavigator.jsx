@@ -45,7 +45,7 @@ const HomeStack = () => {
         options={({ navigation }) => ({
           headerTitle: "",
           headerStyle: {
-            backgroundColor: '#161717',
+            backgroundColor: '#09090bf2',
           },
           headerLeft: () => (
             <TouchableOpacity

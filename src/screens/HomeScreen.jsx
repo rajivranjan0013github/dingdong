@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -25,6 +25,16 @@ const HomeScreen = () => {
   const { generateTopicStatus } = useSelector(state => state.topic);
   const [topic, setTopic] = useState('');
   const navigation = useNavigation();
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    // Focus the input when component mounts
+    const timeoutId = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const handleGenerateQuiz = async () => {
     if (!topic.trim()) return;
@@ -94,6 +104,7 @@ const HomeScreen = () => {
           <View className="flex-row items-center">
             <View className="flex-1 bg-secondary rounded-3xl min-h-[44px] max-h-[120px] px-4 py-2 mr-2 justify-center border border-border">
               <TextInput
+                ref={inputRef}
                 value={topic}
                 onChangeText={setTopic}
                 placeholder="Enter a topic"
@@ -136,8 +147,6 @@ const HomeScreen = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-
     </SafeAreaView>
   );
 };

@@ -16,6 +16,6 @@ export const getRelativeTime = (dateString) => {
     } else if (diffInDays < 7) {
       return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
     } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
     }
   };

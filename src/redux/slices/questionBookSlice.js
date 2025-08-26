@@ -7,7 +7,7 @@ import { storage } from '../../utils/MMKVStorage';
 export const fetchCurrentQuestionBook = createAsyncThunk(
   'questionBook/fetchCurrentQuestionBook',
   async (id, { rejectWithValue }) => {
-    try {
+    try {      
       const response = await fetch(`${API_URL}/api/question/${id}`);
 
       if (!response.ok) {

@@ -28,8 +28,10 @@ const CustomDrawerContent = () => {
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
+  console.log('recentTopics', recentTopics);
+
   useEffect(() => {
-    dispatch(fetchTopics({ skip: 0, limit: 10 }));
+    dispatch(fetchTopics({ skip: 0, limit: 20 }));
   }, [dispatch]);
 
   const handleLoadMore = () => {
@@ -41,7 +43,7 @@ const CustomDrawerContent = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await dispatch(fetchTopics({ skip: 0, limit: 10 }));
+      await dispatch(fetchTopics({ skip: 0, limit: 20 }));
     } catch (error) {
       console.error('Error refreshing topics:', error);
     } finally {
@@ -55,8 +57,17 @@ const CustomDrawerContent = () => {
 
   return (
     <View className="flex-1 bg-[#1F1B24]">
+      {/* Home Button */}
+      {/* <TouchableOpacity
+        onPress={() => navigation.navigate('HomeDrawer')}
+        className="p-4 border-t border-border flex-row items-center"
+      >
+        <Icon name="home" size={24} color="#fff" />
+        <Text className="text-foreground text-base ml-3">Home</Text>
+      </TouchableOpacity> */}
+
       {/* Header */}
-      <View className="p-4 border-b border-border">
+      <View className="p-4 border-b border-gray-700">
         <Text className="text-xl font-bold text-foreground">Question History</Text>
       </View>
 
@@ -64,7 +75,7 @@ const CustomDrawerContent = () => {
       <View className="flex-1">
         {fetchTopicStatus === 'loading' ? (
           <FlatList
-            data={Array.from({ length: 5 })}
+            data={Array.from({ length: 10 })}
             renderItem={({ index }) => (
               <Skeleton key={index} className="h-[76px] p-4 mb-3" />
             )}
@@ -75,9 +86,9 @@ const CustomDrawerContent = () => {
           <FlatList
             data={recentTopics}
             keyExtractor={(item, index) => `${item._id}-${index}`}
-            initialNumToRender={5}
-            maxToRenderPerBatch={5}
-            windowSize={7}
+            initialNumToRender={20}
+            maxToRenderPerBatch={20}
+            windowSize={20}
             removeClippedSubviews={true}
             refreshControl={
               <RefreshControl
@@ -93,9 +104,9 @@ const CustomDrawerContent = () => {
                 onPress={() => handleTopicSelect(recentTopic)}
               >
                 <View className="flex-1 flex-row justify-between items-center">
-                  <Text className="text-foreground font-semibold text-sm capitalize flex-1 mr-2">
-                    {recentTopic?.topic && recentTopic.topic?.length > 45
-                      ? recentTopic.topic.substring(0, 45) + '...'
+                  <Text className="text-foreground font-semibold capitalize flex-1 mr-2">
+                    {recentTopic?.topic && recentTopic.topic?.length > 30
+                      ? recentTopic.topic.substring(0, 30) + '...'
                       : recentTopic?.topic}
                   </Text>
                   <Text className="text-muted-foreground text-xs">
@@ -123,14 +134,7 @@ const CustomDrawerContent = () => {
         )}
       </View>
 
-      {/* Home Button */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate('HomeDrawer')}
-        className="p-4 border-t border-border flex-row items-center"
-      >
-        <Icon name="home" size={24} color="#fff" />
-        <Text className="text-foreground text-base ml-3">Home</Text>
-      </TouchableOpacity>
+      
     </View>
   );
 };

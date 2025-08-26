@@ -17,14 +17,31 @@ const initialState = {
   isFetchingMore: false,
   skip: 0,
   limit: 10,
+  total: 0,
+  lastFetchTime: null,
 };
 
 // Fetch first page of topics
 export const fetchTopics = createAsyncThunk(
   'topic/fetchTopics',
-  async ({ skip = 0, limit = 10 } = {}) => {
+  async ({ skip = 0, limit = 10 } = {}, { getState }) => {
     try {
+      const state = getState().topic;
+      
+      // Prevent duplicate fetches within 2 seconds
+      if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
+        console.log('Skipping fetch - too soon since last fetch');
+        return {
+          topics: state.topics,
+          hasMore: state.hasMore,
+          total: state.total,
+          skip: state.skip,
+          limit: state.limit
+        };
+      }
+
       const jwt = storage.getString('jwt');
+      console.log('fetching topics');
 
       const response = await fetch(
         `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
@@ -36,9 +53,17 @@ export const fetchTopics = createAsyncThunk(
         },
       );
       if (!response.ok) {
-        throw new Error('Failed to fetch topics');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch topics');
       }
       const data = await response.json();
+      console.log('data', data);
+      
+      // Validate response data
+      if (!Array.isArray(data.topics)) {
+        throw new Error('Invalid response format: topics array missing');
+      }
+      
       return { ...data, skip, limit };
     } catch (error) {
       console.error('Error fetching topics:', error);
@@ -52,6 +77,32 @@ export const fetchMoreTopics = createAsyncThunk(
   'topic/fetchMoreTopics',
   async ({ skip, limit }, { getState }) => {
     try {
+      const state = getState().topic;
+      
+      // Prevent duplicate fetches within 2 seconds
+      if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
+        console.log('Skipping fetch more - too soon since last fetch');
+        return {
+          topics: [],
+          hasMore: state.hasMore,
+          total: state.total,
+          skip: state.skip,
+          limit: state.limit
+        };
+      }
+
+      // Don't fetch if we're already at the end
+      if (!state.hasMore) {
+        console.log('No more topics to fetch');
+        return {
+          topics: [],
+          hasMore: false,
+          total: state.total,
+          skip: state.skip,
+          limit: state.limit
+        };
+      }
+
       const jwt = storage.getString('jwt');
       const response = await fetch(
         `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
@@ -63,9 +114,16 @@ export const fetchMoreTopics = createAsyncThunk(
         },
       );
       if (!response.ok) {
-        throw new Error('Failed to fetch more topics');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch more topics');
       }
       const data = await response.json();
+      
+      // Validate response data
+      if (!Array.isArray(data.topics)) {
+        throw new Error('Invalid response format: topics array missing');
+      }
+      
       return { ...data, skip, limit };
     } catch (error) {
       console.error('Error fetching more topics:', error);
@@ -161,30 +219,41 @@ const topicSlice = createSlice({
       .addCase(fetchTopics.pending, state => {
         state.fetchTopicStatus = 'loading';
         state.error = null;
-        state.topics = [];
-        state.skip = 0;
-        state.hasMore = true;
+        // Don't clear topics immediately to prevent UI flicker
+        if (!state.topics.length) {
+          state.topics = [];
+        }
       })
       .addCase(fetchTopics.fulfilled, (state, action) => {
         state.fetchTopicStatus = 'succeeded';
         state.topics = action.payload.topics;
         state.hasMore = action.payload.hasMore;
-        state.skip = action.payload.topics.length;
+        state.total = action.payload.total;
+        state.skip = action.payload.skip;
         state.limit = action.payload.limit;
+        state.lastFetchTime = Date.now();
       })
       .addCase(fetchTopics.rejected, (state, action) => {
         state.fetchTopicStatus = 'failed';
         state.error = action.error.message;
       })
-      .addCase(fetchMoreTopics.pending, state => {
+      .addCase(fetchMoreTopics.pending, (state, action) => {
+        // Prevent duplicate fetches
+        if (state.isFetchingMore) return;
         state.isFetchingMore = true;
         state.error = null;
       })
       .addCase(fetchMoreTopics.fulfilled, (state, action) => {
         state.isFetchingMore = false;
-        state.topics = [...state.topics, ...action.payload.topics];
+        // Filter out any duplicates by _id
+        const newTopics = action.payload.topics.filter(
+          newTopic => !state.topics.some(existingTopic => existingTopic._id === newTopic._id)
+        );
+        state.topics = [...state.topics, ...newTopics];
         state.hasMore = action.payload.hasMore;
-        state.skip += action.payload.topics.length;
+        state.total = action.payload.total;
+        state.skip = action.payload.skip;
+        state.lastFetchTime = Date.now();
       })
       .addCase(fetchMoreTopics.rejected, (state, action) => {
         state.isFetchingMore = false;
