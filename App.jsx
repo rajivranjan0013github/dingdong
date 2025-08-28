@@ -1,9 +1,9 @@
 import 'react-native-gesture-handler';
 import "./global.css"
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import MainNavigator from './src/navigation/MainNavigator';
-import { StatusBar, useColorScheme, View, Linking } from 'react-native';
+import { useColorScheme, View, Linking, StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,6 +13,14 @@ import { DeviceEventEmitter } from 'react-native';
 
 // Custom event for deep link notifications
 export const DEEP_LINK_EVENT = 'DEEP_LINK_RECEIVED';
+
+const navTheme = {
+ ...DarkTheme,
+ colors: {
+   ...DarkTheme.colors,
+   background: '#09090b',
+ },
+};
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -112,9 +120,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
+        <StatusBar barStyle={'light-content'} backgroundColor="#09090b" />
         {/* <ThemeProvider value={navTheme}> */}
-          <StatusBar barStyle={'light-content'} />
-          <NavigationContainer>
+          <NavigationContainer theme={navTheme}>
             <MainNavigator />
           </NavigationContainer>
       </Provider>

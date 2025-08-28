@@ -17,7 +17,9 @@ import {
   ActivityIndicator,
   FlatList,
   ToastAndroid,
+  ScrollView,
 } from 'react-native';
+import AiExplanationDialog from '../components/customUI/AiExplanationDialog';
 import { Text } from '../components/ui/text';
 import {
   Card,
@@ -35,10 +37,7 @@ import {
   updateCurrentQuestionBook,
 } from '../redux/slices/questionBookSlice';
 import { useFocusEffect } from '@react-navigation/native';
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetBackdrop,
-} from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { generateMoreQuestions } from '../redux/slices/topicSlice';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -48,11 +47,12 @@ import {
   X,
   BarChart2,
   Filter as FilterIcon,
-  List,
+  ListCollapse,
   ChevronDown,
   BookOpen,
   AlertCircle,
   Share2,
+  Lightbulb,
 } from 'lucide-react-native';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
 import Animated, {
@@ -279,11 +279,14 @@ const ResultsBottomSheet = ({
   );
 };
 
+
+
 const QuestionCard = React.memo(
   ({ question, questionIndex, handleOptionSelect }) => {
     const [internalUserAnswer, setInternalUserAnswer] = useState(
       question?.userAnswer,
     );
+    const [showAiExplanation, setShowAiExplanation] = useState(false);
 
     // Sync internal state with prop
     useEffect(() => {
@@ -390,9 +393,18 @@ const QuestionCard = React.memo(
             {/* Explanation section - shown after answering */}
             {isAnswered && (
               <View className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <Text className="text-sm font-medium text-primary">
-                  Explanation:
-                </Text>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-sm font-medium text-primary">
+                    Explanation:
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowAiExplanation(true)}
+                    className="flex-row items-center gap-2 bg-primary/10 px-3 py-1 rounded-full"
+                  >
+                    <Lightbulb size={16} color="#007AFF" />
+                    <Text className="text-primary text-sm">More Details</Text>
+                  </TouchableOpacity>
+                </View>
                 <View className="mt-1">
                   <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
                     {String(question?.explanation ?? '')}
@@ -400,6 +412,14 @@ const QuestionCard = React.memo(
                 </View>
               </View>
             )}
+
+            {/* AI Explanation Dialog */}
+            <AiExplanationDialog
+              visible={showAiExplanation}
+              onClose={() => setShowAiExplanation(false)}
+              question={question}
+              userAnswer={internalUserAnswer}
+            />
           </View>
         </CardContent>
       </Card>
@@ -419,6 +439,7 @@ const CollapsibleQuestionCard = React.memo(
     const [internalUserAnswer, setInternalUserAnswer] = useState(
       question?.userAnswer,
     );
+    const [showAiExplanation, setShowAiExplanation] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useSharedValue(0);
     const chevronRotation = useSharedValue(0);
@@ -485,7 +506,7 @@ const CollapsibleQuestionCard = React.memo(
                 </View>
                 {/* Question text with MathJax */}
                 <View className="mt-1">
-                  <MathJaxSvg fontSize={20} color="#ffffff" fontCache>
+                  <MathJaxSvg fontSize={17} color="#ffffff" fontCache>
                     {String(question?.question ?? '')}
                   </MathJaxSvg>
                 </View>
@@ -543,7 +564,7 @@ const CollapsibleQuestionCard = React.memo(
                       </View>
                       <View className="flex-1">
                         <MathJaxSvg
-                          fontSize={16}
+                          fontSize={14}
                           color={optionTextColor}
                           fontCache
                         >
@@ -568,9 +589,18 @@ const CollapsibleQuestionCard = React.memo(
               {/* Explanation section - shown after answering */}
               {isAnswered && (
                 <View className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <Text className="text-sm font-medium text-primary">
-                    Explanation:
-                  </Text>
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-sm font-medium text-primary">
+                      Explanation:
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setShowAiExplanation(true)}
+                      className="flex-row items-center gap-2 bg-primary/10 px-3 py-1 rounded-full"
+                    >
+                      <Lightbulb size={16} color="#007AFF" />
+                      <Text className="text-primary text-sm">More Details</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View className="mt-1">
                     <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
                       {String(question?.explanation ?? '')}
@@ -578,6 +608,14 @@ const CollapsibleQuestionCard = React.memo(
                   </View>
                 </View>
               )}
+
+              {/* AI Explanation Dialog */}
+              <AiExplanationDialog
+                visible={showAiExplanation}
+                onClose={() => setShowAiExplanation(false)}
+                question={question}
+                userAnswer={internalUserAnswer}
+              />
             </View>
           </CardContent>
         </Animated.View>
@@ -662,8 +700,8 @@ const OptionsBottomSheet = ({
       },
     },
     {
-      icon: List,
-      text: showAccordionView ? 'Normal View' : 'Accordion View',
+      icon: ListCollapse,
+      text: showAccordionView ? 'Normal View' : 'Collapsible View',
       onPress: () => {
         handleToggleAccordionView();
         onClose();
@@ -771,11 +809,14 @@ const FilterBar = ({ showFilterBar, selectedFilter, onFilterChange }) => {
 };
 
 const HeaderCard = ({ topic, prompt }) => (
-  <Card className="p-0 border-0 shadow-none">
-    <CardHeader className="p-[2px] border-border">
+  <Card className="p-0 border-0 shadow-none mb-0">
+    <CardHeader className="p-4 bg-primary/5 rounded-xl border border-primary/10">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
-          <CardTitle className="text-2xl font-bold text-foreground mb-1">
+          <Text className="text-sm font-medium text-primary/70 uppercase tracking-wider mb-1">
+            Current Topic
+          </Text>
+          <CardTitle className="text-3xl font-bold text-foreground">
             {topic}
           </CardTitle>
         </View>

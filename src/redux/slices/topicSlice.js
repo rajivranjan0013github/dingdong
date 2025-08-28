@@ -13,6 +13,8 @@ const initialState = {
   generateTopicStatus: 'idle',
   error: null,
   generateMoreQuestionsStatus: 'idle',
+  getAiExplanationStatus: 'idle',
+  aiExplanation: null,
   hasMore: true,
   isFetchingMore: false,
   skip: 0,
@@ -159,6 +161,39 @@ export const generateTopic = createAsyncThunk(
   },
 );
 
+export const getAiExplanation = createAsyncThunk(
+  'topic/getAiExplanation',
+  async ({ question, options, correctAnswer, userAnswer, originalExplanation }) => {
+    try {
+      const jwt = storage.getString('jwt');
+      const response = await fetch(`${API_URL}/api/topic/explain-question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({
+          question,
+          options,
+          correctAnswer,
+          userAnswer,
+          originalExplanation,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI explanation');
+      }
+
+      const data = await response.json();
+      return data.explanation;
+    } catch (error) {
+      console.error('Error getting AI explanation:', error);
+      throw new Error(error.message || 'Failed to get AI explanation');
+    }
+  },
+);
+
 export const generateMoreQuestions = createAsyncThunk(
   'topic/generateMoreQuestions',
   async (questionBookId, { dispatch, getState }) => {
@@ -288,6 +323,19 @@ const topicSlice = createSlice({
       })
       .addCase(generateMoreQuestions.rejected, (state, action) => {
         state.generateMoreQuestionsStatus = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(getAiExplanation.pending, (state) => {
+        state.getAiExplanationStatus = 'loading';
+        state.aiExplanation = null;
+        state.error = null;
+      })
+      .addCase(getAiExplanation.fulfilled, (state, action) => {
+        state.getAiExplanationStatus = 'succeeded';
+        state.aiExplanation = action.payload;
+      })
+      .addCase(getAiExplanation.rejected, (state, action) => {
+        state.getAiExplanationStatus = 'failed';
         state.error = action.error.message;
       });
   },

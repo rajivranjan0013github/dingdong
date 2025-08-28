@@ -28,8 +28,6 @@ const CustomDrawerContent = () => {
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
-  console.log('recentTopics', recentTopics);
-
   useEffect(() => {
     dispatch(fetchTopics({ skip: 0, limit: 20 }));
   }, [dispatch]);
@@ -105,13 +103,31 @@ const CustomDrawerContent = () => {
               >
                 <View className="flex-1 flex-row justify-between items-center">
                   <Text className="text-foreground font-semibold capitalize flex-1 mr-2">
-                    {recentTopic?.topic && recentTopic.topic?.length > 30
-                      ? recentTopic.topic.substring(0, 30) + '...'
+                    {recentTopic?.topic && recentTopic.topic?.length > 25
+                      ? recentTopic.topic.substring(0, 25) + '...'
                       : recentTopic?.topic}
                   </Text>
-                  <Text className="text-muted-foreground text-xs">
-                    {getRelativeTime(recentTopic.createdAt)}
-                  </Text>
+                  <View className="items-center">
+                    <Text className="text-muted-foreground text-xs">
+                      {getRelativeTime(recentTopic.createdAt)}
+                    </Text>
+                    <View className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden flex-row">
+                      {/* Green bar for correct answers */}
+                      <View 
+                        className="h-full bg-green-500" 
+                        style={{ 
+                          width: `${(recentTopic.correctLength / recentTopic.questionLength) * 100}%` 
+                        }} 
+                      />
+                      {/* Red bar for incorrect answers */}
+                      <View 
+                        className="h-full bg-red-500" 
+                        style={{ 
+                          width: `${((recentTopic.answeredLength - recentTopic.correctLength) / recentTopic.questionLength) * 100}%` 
+                        }} 
+                      />
+                    </View>
+                  </View>
                 </View>
               </TouchableOpacity>
             )}
