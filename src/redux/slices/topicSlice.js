@@ -11,6 +11,7 @@ const initialState = {
   topics: [],
   fetchTopicStatus: 'idle',
   generateTopicStatus: 'idle',
+  pdfUploadStatus: 'idle',
   error: null,
   generateMoreQuestionsStatus: 'idle',
   getAiExplanationStatus: 'idle',
@@ -29,7 +30,7 @@ export const fetchTopics = createAsyncThunk(
   async ({ skip = 0, limit = 10 } = {}, { getState }) => {
     try {
       const state = getState().topic;
-      
+
       // Prevent duplicate fetches within 2 seconds
       if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
         console.log('Skipping fetch - too soon since last fetch');
@@ -38,7 +39,7 @@ export const fetchTopics = createAsyncThunk(
           hasMore: state.hasMore,
           total: state.total,
           skip: state.skip,
-          limit: state.limit
+          limit: state.limit,
         };
       }
 
@@ -60,12 +61,12 @@ export const fetchTopics = createAsyncThunk(
       }
       const data = await response.json();
       console.log('data', data);
-      
+
       // Validate response data
       if (!Array.isArray(data.topics)) {
         throw new Error('Invalid response format: topics array missing');
       }
-      
+
       return { ...data, skip, limit };
     } catch (error) {
       console.error('Error fetching topics:', error);
@@ -80,7 +81,7 @@ export const fetchMoreTopics = createAsyncThunk(
   async ({ skip, limit }, { getState }) => {
     try {
       const state = getState().topic;
-      
+
       // Prevent duplicate fetches within 2 seconds
       if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
         console.log('Skipping fetch more - too soon since last fetch');
@@ -89,7 +90,7 @@ export const fetchMoreTopics = createAsyncThunk(
           hasMore: state.hasMore,
           total: state.total,
           skip: state.skip,
-          limit: state.limit
+          limit: state.limit,
         };
       }
 
@@ -101,7 +102,7 @@ export const fetchMoreTopics = createAsyncThunk(
           hasMore: false,
           total: state.total,
           skip: state.skip,
-          limit: state.limit
+          limit: state.limit,
         };
       }
 
@@ -120,12 +121,12 @@ export const fetchMoreTopics = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch more topics');
       }
       const data = await response.json();
-      
+
       // Validate response data
       if (!Array.isArray(data.topics)) {
         throw new Error('Invalid response format: topics array missing');
       }
-      
+
       return { ...data, skip, limit };
     } catch (error) {
       console.error('Error fetching more topics:', error);
@@ -163,7 +164,13 @@ export const generateTopic = createAsyncThunk(
 
 export const getAiExplanation = createAsyncThunk(
   'topic/getAiExplanation',
-  async ({ question, options, correctAnswer, userAnswer, originalExplanation }) => {
+  async ({
+    question,
+    options,
+    correctAnswer,
+    userAnswer,
+    originalExplanation,
+  }) => {
     try {
       const jwt = storage.getString('jwt');
       const response = await fetch(`${API_URL}/api/topic/explain-question`, {
@@ -219,6 +226,37 @@ export const generateMoreQuestions = createAsyncThunk(
     } catch (error) {
       console.error('Error generating more questions:', error);
       throw new Error(error.message || 'Failed to generate more questions');
+    }
+  },
+);
+
+export const uploadPdf = createAsyncThunk(
+  'topic/uploadPdf',
+  async ({ formData }, { dispatch, rejectWithValue }) => {
+    try {
+      console.log(formData);
+      const jwt = storage.getString('jwt');
+      const response = await fetch(`${API_URL}/api/topic/upload-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload PDF');
+      }
+
+      const data = await response.json();
+      console.log('data', data);
+      dispatch(setCurrentQuestionBook(data?.data));
+      return data.data;
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      return rejectWithValue(error.message || 'Failed to upload PDF');
     }
   },
 );
@@ -282,7 +320,10 @@ const topicSlice = createSlice({
         state.isFetchingMore = false;
         // Filter out any duplicates by _id
         const newTopics = action.payload.topics.filter(
-          newTopic => !state.topics.some(existingTopic => existingTopic._id === newTopic._id)
+          newTopic =>
+            !state.topics.some(
+              existingTopic => existingTopic._id === newTopic._id,
+            ),
         );
         state.topics = [...state.topics, ...newTopics];
         state.hasMore = action.payload.hasMore;
@@ -325,7 +366,7 @@ const topicSlice = createSlice({
         state.generateMoreQuestionsStatus = 'failed';
         state.error = action.error.message;
       })
-      .addCase(getAiExplanation.pending, (state) => {
+      .addCase(getAiExplanation.pending, state => {
         state.getAiExplanationStatus = 'loading';
         state.aiExplanation = null;
         state.error = null;
@@ -337,6 +378,20 @@ const topicSlice = createSlice({
       .addCase(getAiExplanation.rejected, (state, action) => {
         state.getAiExplanationStatus = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(uploadPdf.pending, state => {
+        state.pdfUploadStatus = 'loading';
+        state.error = null;
+      })
+      .addCase(uploadPdf.fulfilled, (state, action) => {
+        state.pdfUploadStatus = 'succeeded';
+        state.generateTopicStatus = 'succeeded';
+        console.log('action.payload', action.payload);
+        state.topics.unshift(action.payload);
+      })
+      .addCase(uploadPdf.rejected, (state, action) => {
+        state.pdfUploadStatus = 'failed';
+        state.error = action.payload;
       });
   },
 });

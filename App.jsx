@@ -31,7 +31,8 @@ export default function App() {
     // Handle deep links when app is running
     const handleDeepLink = (event) => {
       const url = event.url;
-      if (url.includes('linkingserver.vercel.app')) {
+      console.log('url', url);
+      if (url.includes('www.topicwise.app')) {
         const urlParts = url.split('/');
         if (urlParts.includes('questions')) {
           const urlIndex = urlParts.indexOf('questions');
@@ -66,6 +67,7 @@ export default function App() {
     const getInitialURL = async () => {
       try {
         const initialUrl = await Linking.getInitialURL();
+        console.log('initialUrl', initialUrl);
         if (initialUrl) {
           handleDeepLink({ url: initialUrl });
         }

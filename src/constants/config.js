@@ -1,3 +1,3 @@
-export const API_URL = 'https://app.thebilling.in';
-// export const API_URL = 'http://10.249.211.152:3002';
+//export const API_URL = 'https://app.thebilling.in';
+export const API_URL = 'http://10.221.31.175:3003';
 
