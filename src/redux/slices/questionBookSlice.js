@@ -14,7 +14,6 @@ export const fetchCurrentQuestionBook = createAsyncThunk(
         throw new Error('Failed to fetch questions');
       }
       const data = await response.json();
-      console.log('data', data);
       return data;
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch questions');

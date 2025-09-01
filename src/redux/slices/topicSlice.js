@@ -33,7 +33,6 @@ export const fetchTopics = createAsyncThunk(
 
       // Prevent duplicate fetches within 2 seconds
       if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
-        console.log('Skipping fetch - too soon since last fetch');
         return {
           topics: state.topics,
           hasMore: state.hasMore,
@@ -44,7 +43,6 @@ export const fetchTopics = createAsyncThunk(
       }
 
       const jwt = storage.getString('jwt');
-      console.log('fetching topics');
 
       const response = await fetch(
         `${API_URL}/api/topic?skip=${skip}&limit=${limit}`,
@@ -60,7 +58,6 @@ export const fetchTopics = createAsyncThunk(
         throw new Error(errorData.message || 'Failed to fetch topics');
       }
       const data = await response.json();
-      console.log('data', data);
 
       // Validate response data
       if (!Array.isArray(data.topics)) {
@@ -84,7 +81,6 @@ export const fetchMoreTopics = createAsyncThunk(
 
       // Prevent duplicate fetches within 2 seconds
       if (state.lastFetchTime && Date.now() - state.lastFetchTime < 2000) {
-        console.log('Skipping fetch more - too soon since last fetch');
         return {
           topics: [],
           hasMore: state.hasMore,
@@ -96,7 +92,6 @@ export const fetchMoreTopics = createAsyncThunk(
 
       // Don't fetch if we're already at the end
       if (!state.hasMore) {
-        console.log('No more topics to fetch');
         return {
           topics: [],
           hasMore: false,
@@ -152,7 +147,6 @@ export const generateTopic = createAsyncThunk(
         throw new Error('Failed to generate topic');
       }
       const data = await response.json();
-      console.log('data', data);
       dispatch(setCurrentQuestionBook(data?.data));
       return data.data;
     } catch (error) {
@@ -234,7 +228,6 @@ export const uploadPdf = createAsyncThunk(
   'topic/uploadPdf',
   async ({ formData }, { dispatch, rejectWithValue }) => {
     try {
-      console.log(formData);
       const jwt = storage.getString('jwt');
       const response = await fetch(`${API_URL}/api/topic/upload-pdf`, {
         method: 'POST',
@@ -251,7 +244,6 @@ export const uploadPdf = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log('data', data);
       dispatch(setCurrentQuestionBook(data?.data));
       return data.data;
     } catch (error) {
@@ -386,7 +378,6 @@ const topicSlice = createSlice({
       .addCase(uploadPdf.fulfilled, (state, action) => {
         state.pdfUploadStatus = 'succeeded';
         state.generateTopicStatus = 'succeeded';
-        console.log('action.payload', action.payload);
         state.topics.unshift(action.payload);
       })
       .addCase(uploadPdf.rejected, (state, action) => {

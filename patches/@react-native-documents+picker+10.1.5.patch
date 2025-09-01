@@ -1,0 +1,13 @@
+diff --git a/node_modules/@react-native-documents/picker/android/src/main/java/com/reactnativedocumentpicker/RNDocumentPickerModule.kt b/node_modules/@react-native-documents/picker/android/src/main/java/com/reactnativedocumentpicker/RNDocumentPickerModule.kt
+index e79951c..e723d9a 100644
+--- a/node_modules/@react-native-documents/picker/android/src/main/java/com/reactnativedocumentpicker/RNDocumentPickerModule.kt
++++ b/node_modules/@react-native-documents/picker/android/src/main/java/com/reactnativedocumentpicker/RNDocumentPickerModule.kt
+@@ -97,7 +97,7 @@ class RNDocumentPickerModule(reactContext: ReactApplicationContext) :
+ 
+     try {
+       val intent = IntentFactory.getPickIntent(options)
+-      currentActivity.startActivityForResult(intent, PICK_FILES_REQUEST_CODE)
++      currentActivity.startActivityForResult(Intent.createChooser(intent, null), PICK_FILES_REQUEST_CODE)
+     } catch (e: ActivityNotFoundException) {
+       promise.reject(UNABLE_TO_OPEN_FILE_TYPE, e)
+     } catch (e: Exception) {

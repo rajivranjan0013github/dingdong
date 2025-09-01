@@ -88,7 +88,6 @@ const HomeScreen = () => {
       }
     } catch (error) {}
   };
-  console.log(selectedDoc);
 
   const handleGenerateQuiz = async () => {
     if (!topic.trim() && !selectedDoc) return;
@@ -101,7 +100,6 @@ const HomeScreen = () => {
         await dispatch(generateTopic(topic));
       } else if (selectedDoc) {
         const formData = new FormData();
-        console.log(selectedDoc);
         formData.append('file', {
           uri: selectedDoc.uri,
           type: selectedDoc.type,
@@ -150,11 +148,13 @@ const HomeScreen = () => {
 
         <TypeWriter
           texts={[
-            "Try 'React Native Basics'",
-            "Try 'JavaScript ES6 Features'",
-            "Try 'Data Structures and Algorithms'",
-            "Try 'System Design Concepts'",
-            "Try 'Machine Learning Fundamentals'",
+            "Try 'CAT Quant Questions'",
+            "Try 'SSC CGL English Questions'",
+            "Try 'SSC English Grammar'",
+            "Try 'Indian History Basics'",
+            "Try 'Integration IIT JEE advance level'",
+            "Try 'Chemistry NEET level'",
+            "Try 'Biolgy Female Human Anatomy'",
           ]}
           className="text-primary text-lg mt-2 mx-8 text-center opacity-80"
         />

@@ -12,7 +12,6 @@ export const uploadPdf = createAsyncThunk(
   'pdf/uploadPdf',
   async ({ formData }, { dispatch, rejectWithValue }) => {
     try {
-      console.log(formData);
       const jwt = storage.getString('jwt');
       const response = await fetch(`${API_URL}/api/topic/upload-pdf`, {
         method: 'POST',
@@ -29,7 +28,6 @@ export const uploadPdf = createAsyncThunk(
       }
 
       const data = await response.json();
-      console.log('data', data);
       dispatch(setCurrentQuestionBook(data?.data));
       return data.data;
     } catch (error) {
