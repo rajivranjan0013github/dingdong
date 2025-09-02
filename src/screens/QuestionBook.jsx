@@ -1027,7 +1027,7 @@ const QuestionBook = ({ route }) => {
     const shareOptions = {
       title: 'Share Question Book',
       message: 'Check out this question book!',
-      url: `https://linkingserver.vercel.app/questions/${questionBookId}`,
+      url: `https://topicwise.app/questions/${questionBookId}`,
       type: 'text/plain',
       failOnCancel: false,
     };

@@ -9,7 +9,6 @@
     "start": "npx react-native start",
     "test": "jest",
     "postinstall": "patch-package"
-    
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.6",

@@ -148,12 +148,12 @@ const HomeScreen = () => {
 
         <TypeWriter
           texts={[
-            "Try 'CAT Quant Questions'",
-            "Try 'SSC CGL English Questions'",
-            "Try 'SSC English Grammar'",
-            "Try 'Indian History Basics'",
-            "Try 'Integration IIT JEE advance level'",
-            "Try 'Chemistry NEET level'",
+            "Try 'World Map based questions for UPSC'",
+            "Try 'Quit India Movement based questions for UPSC'",
+            "Try 'Profit and Loss for SSC CGL'",
+            "Try 'Indian History for SSC CGL'",
+            "Try 'Quantitative Aptitude for CAT'",
+            "Try 'Chemistry for NEET'",
             "Try 'Biolgy Female Human Anatomy'",
           ]}
           className="text-primary text-lg mt-2 mx-8 text-center opacity-80"
