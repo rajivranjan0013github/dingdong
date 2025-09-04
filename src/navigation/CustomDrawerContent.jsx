@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Skeleton } from '../components/ui/skeleton';
 import { getRelativeTime } from '../assets/utility';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CustomDrawerContent = () => {
   const dispatch = useDispatch();
@@ -54,7 +55,7 @@ const CustomDrawerContent = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#1F1B24]">
+    <SafeAreaView className="flex-1 bg-[#1F1B24]">
       {/* Home Button */}
       {/* <TouchableOpacity
         onPress={() => navigation.navigate('HomeDrawer')}
@@ -151,7 +152,7 @@ const CustomDrawerContent = () => {
       </View>
 
       
-    </View>
+    </SafeAreaView>
   );
 };
 

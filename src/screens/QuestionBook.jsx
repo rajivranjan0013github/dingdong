@@ -10,7 +10,7 @@ import Share from 'react-native-share';
 // import './QuestionBook.css';
 import {
   View,
-  SafeAreaView,
+  // SafeAreaView,
   StatusBar,
   TouchableOpacity,
   BackHandler,
@@ -20,6 +20,7 @@ import {
   ScrollView,
 } from 'react-native';
 import AiExplanationDialog from '../components/customUI/AiExplanationDialog';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '../components/ui/text';
 import {
   Card,
@@ -1187,8 +1188,8 @@ const QuestionBook = ({ route }) => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView className="flex-1 bg-background" edges={['bottom', 'left', 'right']}>
+      {/* <StatusBar barStyle="light-content" /> */}
       {/* Filter UI - at the very top, with icon */}
       <FilterBar
         showFilterBar={showFilterBar}

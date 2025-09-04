@@ -2,6 +2,7 @@ package com.topicwise.apps
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.view.WindowCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -13,7 +14,8 @@ class MainActivity : ReactActivity() {
   // ✅ Show splash screen before super.onCreate
   override fun onCreate(savedInstanceState: Bundle?) {
     SplashScreen.show(this) // ✅ shows the splash screen
-    super.onCreate(savedInstanceState)
+    super.onCreate(null)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
   }
 
   // ✅ Handle deep links when app is already running

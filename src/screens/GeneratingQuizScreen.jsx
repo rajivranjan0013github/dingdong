@@ -1,9 +1,10 @@
 
 import React, { useEffect } from 'react';
-import { View, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+import { View, StatusBar, ActivityIndicator } from 'react-native';
 import { Text } from '../components/ui/text';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const GeneratingQuizScreen = () => {
   const navigation = useNavigation();

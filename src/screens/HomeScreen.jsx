@@ -3,15 +3,15 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   ToastAndroid,
-  KeyboardAvoidingView,
   Platform,
   Image,
   DeviceEventEmitter,
+  // KeyboardAvoidingView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
@@ -25,6 +25,8 @@ import TypeWriter from '../components/customUI/TypeWriter';
 import SelectedPDF from '../components/customUI/SelectedPDF';
 import { storage } from '../utils/MMKVStorage';
 import { DEEP_LINK_EVENT } from '../../App';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
@@ -39,7 +41,7 @@ const HomeScreen = () => {
     // Focus the input when component mounts
     const timeoutId = setTimeout(() => {
       inputRef.current?.focus();
-    }, 100);
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, []);
@@ -69,7 +71,7 @@ const HomeScreen = () => {
     }
 
     return () => {
-      DeviceEventEmitter.removeListener(DEEP_LINK_EVENT, handleDeepLink);
+      DeviceEventEmitter.removeAllListeners(DEEP_LINK_EVENT);
     };
   }, [navigation]);
 
@@ -121,9 +123,16 @@ const HomeScreen = () => {
     }
   };
 
+
   return (
-    <SafeAreaView className="flex-1 bg-background/95">
-      <StatusBar barStyle="light-content" backgroundColor="#0F0F23" />
+    <SafeAreaView className="flex-1 ">
+    <KeyboardAvoidingView
+    behavior={'height'}
+    keyboardVerticalOffset={100}
+    style={{flex: 1}}
+  >
+    
+      <StatusBar barStyle="light-content" backgroundColor="#0F0F23" translucent />
 
       {/* Logo + Title */}
       <View className="flex-1 justify-center items-center">
@@ -160,11 +169,7 @@ const HomeScreen = () => {
         />
       </View>
 
-      {/* Bottom Input + Document Selection */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+      
         <View className="px-4 py-4">
           {/* Selected PDF Display */}
           {selectedDoc && (

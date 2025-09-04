@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { storage } from '../utils/MMKVStorage';
 import { logout } from '../redux/slices/userSlice';
 import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -32,8 +33,8 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="black" />
+    <SafeAreaView style={styles.container}>
+      {/* <StatusBar barStyle="light-content" backgroundColor="black" /> */}
       <View style={styles.avatar}>
         <Text style={styles.initials}>
           {user?.name
@@ -75,7 +76,7 @@ const ProfileScreen = ({ navigation }) => {
         confirmText="Logout"
         cancelText="Cancel"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -85,7 +86,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000', // black background
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 60,
   },
   avatar: {
     backgroundColor: '#4a90e2',

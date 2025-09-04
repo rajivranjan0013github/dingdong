@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
-  SafeAreaView,
+  // SafeAreaView,
   StatusBar,
   Image,
   ToastAndroid,
@@ -21,6 +21,7 @@ import { useDispatch } from 'react-redux';
 import { Text } from '../components/ui/text';
 import { Button } from '../components/ui/button';
 import { LogIn } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 async function platformSpecificSignUp() {
   try {

@@ -10,6 +10,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import SplashScreen from 'react-native-splash-screen';
 import { storage } from './src/utils/MMKVStorage';
 import { DeviceEventEmitter } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Custom event for deep link notifications
 export const DEEP_LINK_EVENT = 'DEEP_LINK_RECEIVED';
@@ -118,14 +120,19 @@ export default function App() {
   }
 
   return (
+    
+    <SafeAreaProvider>
+    <KeyboardProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
-        <StatusBar barStyle={'light-content'} backgroundColor="#09090b" />
-        {/* <ThemeProvider value={navTheme}> */}
-          <NavigationContainer theme={navTheme}>
-            <MainNavigator />
-          </NavigationContainer>
+         <StatusBar barStyle={'light-content'} backgroundColor="transparent" translucent />
+          {/* <ThemeProvider value={navTheme}> */}
+            <NavigationContainer theme={navTheme}>
+              <MainNavigator />
+            </NavigationContainer>
       </Provider>
     </GestureHandlerRootView>
+    </KeyboardProvider>
+    </SafeAreaProvider>
   );
 }
