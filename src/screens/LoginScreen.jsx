@@ -5,6 +5,7 @@ import {
 
 import React, { useState } from 'react';
 import { API_URL } from '../constants/config.js';
+import { storage } from '../utils/MMKVStorage';
 import {
   View,
   TouchableOpacity,
@@ -23,52 +24,7 @@ import { Button } from '../components/ui/button';
 import { LogIn } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-async function platformSpecificSignUp() {
-  try {
-    if (Platform.OS === 'android') {
-      // Android: Google Sign-In
-      const googleCredential = await signUpWithGoogle({
-        serverClientId:
-          '545625865420-95ut16at09ds28eb7o0bum7dgmdug8uf.apps.googleusercontent.com',
-        autoSelectEnabled: false,
-      });
 
-      const ans = await fetch(`${API_URL}/api/login/google/loginSignUp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: googleCredential.idToken,
-        }),
-      });
-      const data = await ans.json();
-      return data;
-    } else {
-      // iOS: Apple Sign In
-      const appleCredential = await signUpWithApple({
-        nonce: 'OPTIONAL_NONCE_FOR_SECURITY',
-        requestedScopes: ['fullName', 'email'],
-      });
-
-      return {
-        type: 'apple',
-        token: appleCredential.idToken,
-        id: appleCredential.id,
-        user: {
-          name: appleCredential.displayName,
-          givenName: appleCredential.givenName,
-          familyName: appleCredential.familyName,
-          email: appleCredential.email,
-        },
-      };
-    }
-  } catch (error) {
-    // console.error('Platform-specific sign-up failed:', error);
-    ToastAndroid.show('Platform-specific sign-up failed:', ToastAndroid.SHORT);
-    throw error;
-  }
-}
 
 function Login({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);

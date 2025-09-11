@@ -132,21 +132,26 @@ export const fetchMoreTopics = createAsyncThunk(
 
 export const generateTopic = createAsyncThunk(
   'topic/generateTopic',
-  async (topic, { dispatch }) => {
+  async (topic, { dispatch, getState }) => {
     try {
       const jwt = storage.getString('jwt');
+      const user = getState().user;
+      console.log('user', user);
+      const preferredLanguage = user?.user?.preferredLanguage || storage.getString('preferredLanguage')||'English';
+      
       const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${jwt}`,
         },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic , preferredLanguage: preferredLanguage}),
       });
       if (!response.ok) {
         throw new Error('Failed to generate topic');
       }
       const data = await response.json();
+      console.log('generateTopic.fulfilled', data);
       dispatch(setCurrentQuestionBook(data?.data));
       return data.data;
     } catch (error) {
@@ -164,9 +169,11 @@ export const getAiExplanation = createAsyncThunk(
     correctAnswer,
     userAnswer,
     originalExplanation,
-  }) => {
+  }, { getState }) => {
     try {
       const jwt = storage.getString('jwt');
+      const user = getState().user;
+      const preferredLanguage = user?.user?.preferredLanguage || storage.getString('preferredLanguage')||'English';
       const response = await fetch(`${API_URL}/api/topic/explain-question`, {
         method: 'POST',
         headers: {
@@ -179,6 +186,7 @@ export const getAiExplanation = createAsyncThunk(
           correctAnswer,
           userAnswer,
           originalExplanation,
+          preferredLanguage,
         }),
       });
 

@@ -74,7 +74,8 @@ const AiExplanationDialog = ({ visible, onClose, question, userAnswer }) => {
         options: question.options,
         correctAnswer: question.answer,
         userAnswer: userAnswer,
-        originalExplanation: question.explanation
+        originalExplanation: question.explanation,
+        preferredLanguage: question.language
       }));
     }
   }, [visible, dispatch]);

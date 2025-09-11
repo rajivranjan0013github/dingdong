@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ToastAndroid,
   Platform,
-  Image,
+  Alert,
   DeviceEventEmitter,
   // KeyboardAvoidingView,
 } from 'react-native';
@@ -18,7 +18,6 @@ import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { generateTopic } from '../redux/slices/topicSlice';
 import { uploadPdf } from '../redux/slices/topicSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Logo from '../components/customUI/Logo';
 import { pick, types } from '@react-native-documents/picker';
 import { Text } from '../components/ui/text';
 import TypeWriter from '../components/customUI/TypeWriter';
@@ -26,6 +25,7 @@ import SelectedPDF from '../components/customUI/SelectedPDF';
 import { storage } from '../utils/MMKVStorage';
 import { DEEP_LINK_EVENT } from '../../App';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { Card } from '../components/ui/card';
 
 
 const HomeScreen = () => {
@@ -123,6 +123,18 @@ const HomeScreen = () => {
     }
   };
 
+  const handleScanDoubt = () => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('Scan a doubt coming soon', ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Coming soon', 'Scan a doubt is coming soon');
+    }
+  };
+
+  const handleEnterTopic = () => {
+    inputRef.current?.focus();
+  };
+
 
   return (
     <SafeAreaView className="flex-1 ">
@@ -134,26 +146,53 @@ const HomeScreen = () => {
     
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" translucent />
 
-      {/* Logo + Title */}
+      {/* Feature cards + Typewriter */}
       <View className="flex-1 justify-center items-center">
-        <View
-          className="w-24 h-24 items-center justify-center mb-2 border-2 border-border rounded-3xl"
-          style={{
-            shadowColor: '#FFFFFF',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 1,
-            shadowRadius: 80,
-            elevation: 80,
-            backgroundColor: 'rgba(255, 255, 255, 0.4)',
-          }}
-        >
-          <Image
-            source={require('../assets/app-icon.png')}
-            style={{ width: 85, height: 85 }}
-            resizeMode="contain"
-          />
+        <View className="w-full px-4 mt-2">
+          <View className="flex-row gap-3">
+            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleScanDoubt}>
+                <Card className="h-24 bg-card border-border rounded-xl">
+                  <View className="flex-1 p-4 items-center justify-center gap-2">
+                    <View
+                      className="w-10 h-10 rounded-full items-center justify-center"
+                      style={{ backgroundColor: 'rgba(99,102,241,0.15)' }}
+                    >
+                      <Icon name="camera-outline" size={22} color="#6366f1" />
+                    </View>
+                    <Text className="text-card-foreground font-medium text-center text-gray-500">Ask  doubt</Text>
+                  </View>
+                </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleDocumentSelection}>
+                <Card className="h-24 bg-card border-border rounded-xl">
+                  <View className="flex-1 p-4 items-center justify-center gap-2">
+                    <View
+                      className="w-10 h-10 rounded-full items-center justify-center"
+                      style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}
+                    >
+                      <Icon name="document-text-outline" size={22} color="#10b981" />
+                    </View>
+                    <Text className="text-card-foreground font-medium text-center text-gray-500">Scan PDF</Text>
+                  </View>
+                </Card>
+            </TouchableOpacity>
+
+            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleEnterTopic}>
+                <Card className="h-24 bg-card border-border rounded-xl">
+                  <View className="flex-1 p-4 items-center justify-center gap-2">
+                    <View
+                      className="w-10 h-10 rounded-full items-center justify-center"
+                      style={{ backgroundColor: 'rgba(59,130,246,0.15)' }}
+                    >
+                      <Icon name="create-outline" size={22} color="#3b82f6" />
+                    </View>
+                    <Text className="text-card-foreground font-medium text-center text-gray-500">Enter topic</Text>
+                  </View>
+                </Card>
+            </TouchableOpacity>
+          </View>
         </View>
-        <Logo width={200} height={50} />
 
         <TypeWriter
           texts={[
@@ -165,7 +204,7 @@ const HomeScreen = () => {
             "Try 'Chemistry for NEET'",
             "Try 'Biolgy Female Human Anatomy'",
           ]}
-          className="text-primary text-lg mt-2 mx-8 text-center opacity-80"
+          className="text-primary text-lg mt-4 mx-8 text-center opacity-80"
         />
       </View>
 

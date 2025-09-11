@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.user);
+  const preferredLanguage = user?.preferredLanguage || 'English';
   const [isLogoutDialogVisible, setIsLogoutDialogVisible] = useState(false);
 
   const handleLogout = async () => {
@@ -48,6 +49,12 @@ const ProfileScreen = ({ navigation }) => {
       {user?.email && <Text style={styles.email}>{user.email}</Text>}
 
       <View style={styles.menu}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('LanguageSelect', { fromSettings: true })}
+        >
+          <Text style={styles.menuText}>Preferred Language: {preferredLanguage}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('PrivacyPolicy')}

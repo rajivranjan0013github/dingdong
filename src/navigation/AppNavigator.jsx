@@ -20,6 +20,7 @@ import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import UserInitialsBadge from './UserInitialsBadge';
 import CustomDrawerContent from './CustomDrawerContent';
+import LanguageSelectScreen from '../screens/onboarding/LanguageSelectScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -107,6 +108,11 @@ const AppNavigator = () => {
             options={{ headerShown: false }}
           />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen 
+            name="LanguageSelect" 
+            component={LanguageSelectScreen}
+            options={{ title: 'Choose Language' }}
+          />
           <Stack.Screen name="Quiz" component={QuizScreen} />
           <Stack.Screen name="QuizResult" component={QuizResultScreen} />
           <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
