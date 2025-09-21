@@ -12,6 +12,8 @@ const initialState = {
   fetchTopicStatus: 'idle',
   generateTopicStatus: 'idle',
   pdfUploadStatus: 'idle',
+  imageUploadStatus: 'idle',
+  latestSolve: null,
   error: null,
   generateMoreQuestionsStatus: 'idle',
   getAiExplanationStatus: 'idle',
@@ -136,7 +138,6 @@ export const generateTopic = createAsyncThunk(
     try {
       const jwt = storage.getString('jwt');
       const user = getState().user;
-      console.log('user', user);
       const preferredLanguage = user?.user?.preferredLanguage || storage.getString('preferredLanguage')||'English';
       
       const response = await fetch(`${API_URL}/api/topic/generate-topic`, {
@@ -151,7 +152,6 @@ export const generateTopic = createAsyncThunk(
         throw new Error('Failed to generate topic');
       }
       const data = await response.json();
-      console.log('generateTopic.fulfilled', data);
       dispatch(setCurrentQuestionBook(data?.data));
       return data.data;
     } catch (error) {
@@ -257,6 +257,69 @@ export const uploadPdf = createAsyncThunk(
     } catch (error) {
       console.error('Error uploading PDF:', error);
       return rejectWithValue(error.message || 'Failed to upload PDF');
+    }
+  },
+);
+
+export const uploadDoubtImage = createAsyncThunk(
+  'topic/uploadDoubtImage',
+  async ({ formData }, { dispatch, rejectWithValue }) => {
+    try {
+      const jwt = storage.getString('jwt');
+      const response = await fetch(`${API_URL}/api/topic/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      // returns a Solve document: { question, answer, ... }
+      return data.data;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return rejectWithValue(error.message || 'Failed to upload image');
+    }
+  },
+);
+
+// Generate a new question book related to a solved Q&A
+export const generateRelatedQuestions = createAsyncThunk(
+  'topic/generateRelatedQuestions',
+  async ({ solveId, question, answer }, { getState, dispatch }) => {
+    try {
+      const jwt = storage.getString('jwt');
+      const user = getState().user;
+      const preferredLanguage = user?.user?.preferredLanguage || storage.getString('preferredLanguage') || 'English';
+
+      const response = await fetch(`${API_URL}/api/topic/generate-from-solve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ solveId, question, answer, preferredLanguage }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate related questions');
+      }
+
+      const data = await response.json();
+      // Also set as current question book for immediate navigation
+      dispatch(setCurrentQuestionBook(data?.data));
+      return data.data;
+    } catch (error) {
+      console.error('Error generating related questions:', error);
+      throw new Error(error.message || 'Failed to generate related questions');
     }
   },
 );
@@ -391,6 +454,33 @@ const topicSlice = createSlice({
       .addCase(uploadPdf.rejected, (state, action) => {
         state.pdfUploadStatus = 'failed';
         state.error = action.payload;
+      })
+      .addCase(uploadDoubtImage.pending, state => {
+        state.imageUploadStatus = 'loading';
+        state.latestSolve = null;
+        state.error = null;
+      })
+      .addCase(uploadDoubtImage.fulfilled, (state, action) => {
+        state.imageUploadStatus = 'succeeded';
+        // store the latest solution payload (Solve document)
+        state.latestSolve = action.payload;
+      })
+      .addCase(uploadDoubtImage.rejected, (state, action) => {
+        state.imageUploadStatus = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(generateRelatedQuestions.pending, state => {
+        state.generateMoreQuestionsStatus = 'loading';
+      })
+      .addCase(generateRelatedQuestions.fulfilled, (state, action) => {
+        state.generateMoreQuestionsStatus = 'succeeded';
+        if (action.payload) {
+          state.topics.unshift(action.payload);
+        }
+      })
+      .addCase(generateRelatedQuestions.rejected, (state, action) => {
+        state.generateMoreQuestionsStatus = 'failed';
+        state.error = action.error.message;
       });
   },
 });

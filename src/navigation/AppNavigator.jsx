@@ -14,13 +14,18 @@ import QuizScreen from '../screens/QuizScreen';
 import QuizResultScreen from '../screens/QuizResultScreen';
 import QuizAnalysisScreen from '../screens/QuizAnalysisScreen';
 import GeneratingQuizScreen from '../screens/GeneratingQuizScreen';
+import GeneratingSolutionScreen from '../screens/GeneratingSolutionScreen';
 import QuestionBook from '../screens/QuestionBook';
+import SolutionScreen from '../screens/SolutionScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
 import UserInitialsBadge from './UserInitialsBadge';
 import CustomDrawerContent from './CustomDrawerContent';
 import LanguageSelectScreen from '../screens/onboarding/LanguageSelectScreen';
+import AskDoubtCamera from '../screens/AskDoubtCamera';
+import AskDoubtEdit from '../screens/AskDoubtEdit';
+import DoubtsScreen from '../screens/DoubtsScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -117,6 +122,26 @@ const AppNavigator = () => {
           <Stack.Screen name="QuizResult" component={QuizResultScreen} />
           <Stack.Screen name="QuizAnalysis" component={QuizAnalysisScreen} />
           <Stack.Screen
+            name="AskDoubtCamera"
+            component={AskDoubtCamera}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AskDoubtEdit"
+            component={AskDoubtEdit}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="GeneratingSolution"
+            component={GeneratingSolutionScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Solution"
+            component={SolutionScreen}
+            options={{ title: 'Solution' }}
+          />
+          <Stack.Screen
             name="QuestionBook"
             component={QuestionBook}
             options={{
@@ -130,6 +155,7 @@ const AppNavigator = () => {
           />
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
           <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+          <Stack.Screen name="DoubtsScreen" component={DoubtsScreen} options={{ title: 'Your Doubts' }} />
         </>
       )}
     </Stack.Navigator>

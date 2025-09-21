@@ -63,7 +63,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { MathJaxSvg } from 'react-native-mathjax-html-to-svg';
+import MarkdownMathView from 'react-native-markdown-math-view';
 
 // Constants
 const FILTERS = [
@@ -313,11 +313,28 @@ const QuestionCard = React.memo(
               </Badge>
             )}
           </View>
-          {/* Question text with MathJax */}
+          {/* Question text with Markdown + Math */}
           <View className="mt-1">
-            <MathJaxSvg fontSize={17} color="#ffffff" fontCache>
+            <MarkdownMathView
+              markdownStyle={{
+                body: { color: '#ffffff' },
+                heading1: { color: '#ffffff' },
+                text: { color: '#ffffff' },
+                heading2: { color: '#ffffff' },
+                heading3: { color: '#ffffff' },
+                bullet_list: { color: '#ffffff' },
+                ordered_list: { color: '#ffffff' },
+                paragraph: { color: '#ffffff' },
+                code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                link: { color: '#60a5fa' },
+                blockquote: { color: '#ffffff', borderLeftColor: '#374151' },
+              }}
+              style={{ color: '#ffffff' }}
+            >
               {String(question?.question ?? '')}
-            </MathJaxSvg>
+            </MarkdownMathView>
           </View>
         </CardHeader>
 
@@ -360,7 +377,7 @@ const QuestionCard = React.memo(
                   disabled={isAnswered}
                 >
                   <View
-                    className={`relative p-4 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
+                    className={`relative p-2 rounded-xl border-2 flex-row items-center ${bgColor} ${borderColor}`}
                   >
                     <View className="w-6 h-6 rounded-full bg-muted items-center justify-center mr-4">
                       <Text className="text-sm font-bold text-muted-foreground">
@@ -368,13 +385,26 @@ const QuestionCard = React.memo(
                       </Text>
                     </View>
                     <View className="flex-1">
-                      <MathJaxSvg
-                        fontSize={14}
-                        color={optionTextColor}
-                        fontCache
+                      <MarkdownMathView
+                        markdownStyle={{
+                          body: { color: optionTextColor },
+                          heading1: { color: optionTextColor },
+                          text: { color: optionTextColor },
+                          heading2: { color: optionTextColor },
+                          heading3: { color: optionTextColor },
+                          bullet_list: { color: optionTextColor },
+                          ordered_list: { color: optionTextColor },
+                          paragraph: { color: optionTextColor },
+                          code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                          code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                          fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                          link: { color: '#60a5fa' },
+                          blockquote: { color: optionTextColor, borderLeftColor: '#374151' },
+                        }}
+                        style={{ color: optionTextColor }}
                       >
                         {String(option ?? '')}
-                      </MathJaxSvg>
+                      </MarkdownMathView>
                     </View>
                     {isAnswered && (isUserAnswer || isCorrectAnswer) && (
                       <Badge
@@ -407,9 +437,26 @@ const QuestionCard = React.memo(
                   </TouchableOpacity>
                 </View>
                 <View className="mt-1">
-                  <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
+                  <MarkdownMathView
+                    markdownStyle={{
+                      body: { color: '#9ca3af' },
+                      heading1: { color: '#9ca3af' },
+                      text: { color: '#9ca3af' },
+                      heading2: { color: '#9ca3af' },
+                      heading3: { color: '#9ca3af' },
+                      bullet_list: { color: '#9ca3af' },
+                      ordered_list: { color: '#9ca3af' },
+                      paragraph: { color: '#9ca3af' },
+                      code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                      code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                      fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                      link: { color: '#60a5fa' },
+                      blockquote: { color: '#9ca3af', borderLeftColor: '#374151' },
+                    }}
+                    style={{ color: '#9ca3af' }}
+                  >
                     {String(question?.explanation ?? '')}
-                  </MathJaxSvg>
+                  </MarkdownMathView>
                 </View>
               </View>
             )}
@@ -505,11 +552,28 @@ const CollapsibleQuestionCard = React.memo(
                     </Animated.View>
                   </View>
                 </View>
-                {/* Question text with MathJax */}
+                {/* Question text with Markdown + Math */}
                 <View className="mt-1">
-                  <MathJaxSvg fontSize={17} color="#ffffff" fontCache>
+                  <MarkdownMathView
+                    markdownStyle={{
+                      body: { color: '#ffffff' },
+                      heading1: { color: '#ffffff' },
+                      text: { color: '#ffffff' },
+                      heading2: { color: '#ffffff' },
+                      heading3: { color: '#ffffff' },
+                      bullet_list: { color: '#ffffff' },
+                      ordered_list: { color: '#ffffff' },
+                      paragraph: { color: '#ffffff' },
+                      code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                      code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                      fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                      link: { color: '#60a5fa' },
+                      blockquote: { color: '#ffffff', borderLeftColor: '#374151' },
+                    }}
+                    style={{ color: '#ffffff' }}
+                  >
                     {String(question?.question ?? '')}
-                  </MathJaxSvg>
+                  </MarkdownMathView>
                 </View>
               </View>
             </View>
@@ -564,13 +628,26 @@ const CollapsibleQuestionCard = React.memo(
                         </Text>
                       </View>
                       <View className="flex-1">
-                        <MathJaxSvg
-                          fontSize={14}
-                          color={optionTextColor}
-                          fontCache
+                        <MarkdownMathView
+                          markdownStyle={{
+                            body: { color: optionTextColor },
+                            heading1: { color: optionTextColor },
+                            text: { color: optionTextColor },
+                            heading2: { color: optionTextColor },
+                            heading3: { color: optionTextColor },
+                            bullet_list: { color: optionTextColor },
+                            ordered_list: { color: optionTextColor },
+                            paragraph: { color: optionTextColor },
+                            code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                            code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                            fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                            link: { color: '#60a5fa' },
+                            blockquote: { color: optionTextColor, borderLeftColor: '#374151' },
+                          }}
+                          style={{ color: optionTextColor }}
                         >
                           {String(option ?? '')}
-                        </MathJaxSvg>
+                        </MarkdownMathView>
                       </View>
                       {isAnswered && (isUserAnswer || isCorrectAnswer) && (
                         <Badge
@@ -603,9 +680,26 @@ const CollapsibleQuestionCard = React.memo(
                     </TouchableOpacity>
                   </View>
                   <View className="mt-1">
-                    <MathJaxSvg fontSize={14} color="#9ca3af" fontCache>
+                    <MarkdownMathView
+                      markdownStyle={{
+                        body: { color: '#9ca3af' },
+                        heading1: { color: '#9ca3af' },
+                        text: { color: '#9ca3af' },
+                        heading2: { color: '#9ca3af' },
+                        heading3: { color: '#9ca3af' },
+                        bullet_list: { color: '#9ca3af' },
+                        ordered_list: { color: '#9ca3af' },
+                        paragraph: { color: '#9ca3af' },
+                        code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
+                        code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                        fence: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },
+                        link: { color: '#60a5fa' },
+                        blockquote: { color: '#9ca3af', borderLeftColor: '#374151' },
+                      }}
+                      style={{ color: '#9ca3af' }}
+                    >
                       {String(question?.explanation ?? '')}
-                    </MathJaxSvg>
+                    </MarkdownMathView>
                   </View>
                 </View>
               )}

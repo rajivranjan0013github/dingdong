@@ -51,7 +51,6 @@ const LanguageItem = ({ item, selected, onPress }) => (
 
 const LanguageSelectScreen = ({ navigation, route }) => {
   const user = useSelector(state => state.user);
-  console.log('users', user);
   const preferredLanguage = user?.user?.preferredLanguage || 'English';
   const dispatch = useDispatch();
   const fromSettings = route?.params?.fromSettings;
@@ -67,8 +66,7 @@ const LanguageSelectScreen = ({ navigation, route }) => {
     return locale.startsWith('hi') ? 'Hindi' : 'English';
   }, []);
   const [selectedName, setSelectedName] = useState(defaultName);
-  console.log('selectedName', selectedName);
-  console.log(defaultName)
+
 
   const handleContinue = () => {
     if (!selectedName) return;

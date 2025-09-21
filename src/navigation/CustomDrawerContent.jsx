@@ -65,9 +65,21 @@ const CustomDrawerContent = () => {
         <Text className="text-foreground text-base ml-3">Home</Text>
       </TouchableOpacity> */}
 
+      <TouchableOpacity
+        onPress={() => navigation.navigate('DoubtsScreen')}
+        className="p-4 border-b border-gray-700 flex-row items-center justify-between">
+        <View className="flex-row items-center">
+            <Icon name="help-circle-outline" size={24} color="#fff" />
+            <Text className="text-xl font-bold text-foreground ml-3">Your Doubts</Text>
+        </View>
+        <Icon name="chevron-forward-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Header */}
       <View className="p-4 border-b border-gray-700">
-        <Text className="text-xl font-bold text-foreground">Question History</Text>
+        <Text className="text-xl font-bold text-foreground">
+          Question History
+        </Text>
       </View>
 
       {/* History List */}

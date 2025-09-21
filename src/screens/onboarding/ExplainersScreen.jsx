@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Camera, Brain, ListChecks } from 'lucide-react-native';
+import { FileText, Camera, Brain, ListChecks, Pencil } from 'lucide-react-native';
 
 const BulletRow = ({ title, subtitle, icon }) => (
   <View
@@ -44,15 +44,21 @@ const ExplainersScreen = () => {
     () => [
       {
         key: 'pdf',
-        title: 'Turn PDFs into practice set',
-        subtitle: 'Import PDFs and extract key questions instantly.',
+        title: 'PDFs ---> Practice set',
+        subtitle: 'Import PDFs and extract/generate key questions instantly.',
         icon: <FileText size={40} color="#ffffff" />,
       },
       {
         key: 'camera',
-        title: 'Scan and solve question and get similar questions instantly',
+        title: 'Scan ---> Solved question ---> Similar questions',
         subtitle: 'Capture images, and get step-by-step help.',
         icon: <Camera size={40} color="#ffffff" />,
+      },
+      {
+        key: 'topic',
+        title: 'Enter Topic --> Practice set',
+        subtitle: 'Enter any topic and get a practice set instantly.',
+        icon: <Pencil size={40} color="#ffffff" />,
       },
       {
         key: 'ai',

@@ -57,7 +57,6 @@ export const updateUserProfile = createAsyncThunk(
       if (!response.ok) {
         throw new Error(data.message || 'Failed to update profile');
       }
-      console.log('updateUserProfile.fulfilled', data);
 
       // Prefer server user object if provided; otherwise return the updates as applied
       return data.user || updates;
@@ -110,7 +109,6 @@ const userSlice = createSlice({
         // no-op
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
-        console.log('updateUserProfile.fulfilled', action.payload);
         const updates = action.payload || {};
         const mergedUser = { ...(state.user || {}), ...updates };
         state.user = mergedUser;

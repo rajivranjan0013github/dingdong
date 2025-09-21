@@ -3,78 +3,77 @@ import { Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
-  withSequence,
   withTiming,
+  runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
-const TypeWriter = ({ texts = [], style, onComplete, className }) => {
-  const [currentText, setCurrentText] = useState('');
+const TypeWriter = ({ texts = [], style, className }) => {
   const [textIndex, setTextIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(true);
-  const cursorOpacity = useSharedValue(1);
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
 
-  const cursorStyle = useAnimatedStyle(() => ({
-    opacity: cursorOpacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
-  // Start cursor blinking
-  useEffect(() => {
-    cursorOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0, { duration: 500 }),
-        withTiming(1, { duration: 500 })
-      ),
-      -1,
-      true
-    );
-  }, []);
-
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  const animateText = useCallback(async () => {
-    const text = texts[textIndex];
-
-    if (isTyping) {
-      if (charIndex < text.length) {
-        setCurrentText(text.substring(0, charIndex + 1));
-        setCharIndex(charIndex + 1);
-        await sleep(50); // Typing speed
-      } else {
-        await sleep(1500); // Pause at the end
-        setIsTyping(false);
-        setCharIndex(text.length);
-      }
-    } else {
-      if (charIndex > 0) {
-        setCurrentText(text.substring(0, charIndex - 1));
-        setCharIndex(charIndex - 1);
-        await sleep(30); // Deletion speed
-      } else {
-        await sleep(500); // Pause before next text
-        setIsTyping(true);
-        const nextIndex = (textIndex + 1) % texts.length;
-        setTextIndex(nextIndex);
-        if (nextIndex === 0 && onComplete) {
-          onComplete();
-        }
-      }
-    }
-  }, [textIndex, charIndex, isTyping, texts, onComplete]);
+  const nextText = useCallback(() => {
+    setTextIndex(prevIndex => (prevIndex + 1) % texts.length);
+  }, [texts.length]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(animateText, 10);
-    return () => clearTimeout(timeoutId);
-  }, [animateText]);
+    if (texts.length === 0) return;
+
+    translateY.value = 20; // Start from bottom
+    opacity.value = 0; // Start transparent
+
+    // Animate in
+    translateY.value = withTiming(0, {
+      duration: 400,
+      easing: Easing.out(Easing.ease),
+    });
+    opacity.value = withTiming(1, {
+      duration: 400,
+      easing: Easing.out(Easing.ease),
+    });
+
+    const timer = setTimeout(() => {
+      // Animate out
+      translateY.value = withTiming(-20, {
+        // End by going up
+        duration: 400,
+        easing: Easing.in(Easing.ease),
+      });
+      opacity.value = withTiming(
+        0,
+        {
+          duration: 400,
+          easing: Easing.in(Easing.ease),
+        },
+        finished => {
+          if (finished) {
+            runOnJS(nextText)();
+          }
+        },
+      );
+    }, 2000); // Time text is visible
+
+    return () => clearTimeout(timer);
+  }, [textIndex, texts.length, nextText]);
+
+  if (!texts || texts.length === 0) {
+    return null;
+  }
 
   return (
-    <Text className={className} style={style}>
-      {currentText}
-      <AnimatedText style={[{ marginLeft: 2 }, cursorStyle]}>|</AnimatedText>
-    </Text>
+    <AnimatedText className={className} style={[style, animatedStyle]}>
+      {texts[textIndex]}
+    </AnimatedText>
   );
 };
 

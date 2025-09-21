@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ToastAndroid,
   Platform,
-  Alert,
+  Image,
   DeviceEventEmitter,
   // KeyboardAvoidingView,
 } from 'react-native';
@@ -26,6 +26,8 @@ import { storage } from '../utils/MMKVStorage';
 import { DEEP_LINK_EVENT } from '../../App';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Card } from '../components/ui/card';
+import CustomAlertDialog from '../components/customUI/CustomAlertDialog';
+import SourcePickerDialog from '../components/customUI/SourcePickerDialog';
 
 
 const HomeScreen = () => {
@@ -34,6 +36,7 @@ const HomeScreen = () => {
   const { pdfUploadStatus } = useSelector(state => state.topic);
   const [topic, setTopic] = useState('');
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
   const navigation = useNavigation();
   const inputRef = useRef(null);
 
@@ -58,6 +61,13 @@ const HomeScreen = () => {
 
     DeviceEventEmitter.addListener(DEEP_LINK_EVENT, handleDeepLink);
 
+    const photoListener = DeviceEventEmitter.addListener('ASK_DOUBT_PHOTO', (data) => {
+      if (data?.path) {
+        setCapturedPhoto({ uri: Platform.OS === 'android' ? 'file://' + data.path : data.path });
+        setSelectedDoc(null);
+      }
+    });
+
     // Check pending deep link from storage
     const pending = storage.getString('pendingDeepLink');
     if (pending) {
@@ -72,6 +82,7 @@ const HomeScreen = () => {
 
     return () => {
       DeviceEventEmitter.removeAllListeners(DEEP_LINK_EVENT);
+      photoListener.remove();
     };
   }, [navigation]);
 
@@ -123,20 +134,33 @@ const HomeScreen = () => {
     }
   };
 
-  const handleScanDoubt = () => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show('Scan a doubt coming soon', ToastAndroid.SHORT);
-    } else {
-      Alert.alert('Coming soon', 'Scan a doubt is coming soon');
-    }
-  };
-
   const handleEnterTopic = () => {
     inputRef.current?.focus();
   };
 
 
+  const [isAskDialogVisible, setIsAskDialogVisible] = useState(false);
+  const handleScanDoubt = () => setIsAskDialogVisible(true);
+
+  const handlePickFromGallery = async () => {
+    try {
+      const result = await pick({ type: [types.images], allowMultipleSelection: false });
+      if (result && result.length > 0) {
+        const image = result[0];
+        setIsAskDialogVisible(false);
+        navigation.navigate('AskDoubtEdit', { path: image.uri, source: 'gallery' });
+      }
+    } catch (e) {}
+  };
+
+  const handleOpenCamera = () => {
+    setIsAskDialogVisible(false);
+    navigation.navigate('AskDoubtCamera');
+  };
+
+
   return (
+    <View className="flex-1">
     <SafeAreaView className="flex-1 ">
     <KeyboardAvoidingView
     behavior={'height'}
@@ -147,65 +171,93 @@ const HomeScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#0F0F23" translucent />
 
       {/* Feature cards + Typewriter */}
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center" style={{ transform: [{ translateY: -20 }] }}>
         <View className="w-full px-4 mt-2">
-          <View className="flex-row gap-3">
-            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleScanDoubt}>
-                <Card className="h-24 bg-card border-border rounded-xl">
-                  <View className="flex-1 p-4 items-center justify-center gap-2">
+          <View className="gap-3">
+            <TouchableOpacity className="w-full" activeOpacity={0.8} onPress={handleScanDoubt}>
+              <Card className="h-16 bg-card border-border rounded-xl">
+                <View className="flex-1 p-4 flex-row items-center gap-3">
+                  <View style={{ width: 60, height: '100%' }} className="items-center justify-center">
                     <View
                       className="w-10 h-10 rounded-full items-center justify-center"
                       style={{ backgroundColor: 'rgba(99,102,241,0.15)' }}
                     >
                       <Icon name="camera-outline" size={22} color="#6366f1" />
                     </View>
-                    <Text className="text-card-foreground font-medium text-center text-gray-500">Ask  doubt</Text>
                   </View>
-                </Card>
+                  <View className="flex-1">
+                    <Text className="text-card-foreground font-medium text-left  text-lg">Ask doubt</Text>
+                    <Text className="text-muted-foreground text-xs text-left">Scan a question to solve it and get similar ones</Text>
+                  </View>
+                </View>
+              </Card>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleDocumentSelection}>
-                <Card className="h-24 bg-card border-border rounded-xl">
-                  <View className="flex-1 p-4 items-center justify-center gap-2">
+            <TouchableOpacity className="w-full" activeOpacity={0.8} onPress={handleDocumentSelection}>
+              <Card className="h-16 bg-card border-border rounded-xl">
+                <View className="flex-1 p-4 flex-row items-center gap-3">
+                  <View style={{ width: 60, height: '100%' }} className="items-center justify-center">
                     <View
                       className="w-10 h-10 rounded-full items-center justify-center"
                       style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}
                     >
                       <Icon name="document-text-outline" size={22} color="#10b981" />
                     </View>
-                    <Text className="text-card-foreground font-medium text-center text-gray-500">Scan PDF</Text>
                   </View>
-                </Card>
+                  <View className="flex-1">
+                    <Text className="text-card-foreground font-medium text-left  text-lg">Upload PDF</Text>
+                    <Text className="text-muted-foreground text-xs text-left">Generate practice questions from your PDF</Text>
+                  </View>
+                </View>
+              </Card>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1" activeOpacity={0.8} onPress={handleEnterTopic}>
-                <Card className="h-24 bg-card border-border rounded-xl">
-                  <View className="flex-1 p-4 items-center justify-center gap-2">
+            <TouchableOpacity className="w-full" activeOpacity={0.8} onPress={handleEnterTopic}>
+              <Card className="h-16 bg-card border-border rounded-xl ">
+                <View className="flex-1  p-4 flex-row items-center gap-3">
+                  <View style={{ width: 60, height: '100%' }} className="items-center justify-center">
                     <View
                       className="w-10 h-10 rounded-full items-center justify-center"
                       style={{ backgroundColor: 'rgba(59,130,246,0.15)' }}
                     >
                       <Icon name="create-outline" size={22} color="#3b82f6" />
                     </View>
-                    <Text className="text-card-foreground font-medium text-center text-gray-500">Enter topic</Text>
                   </View>
-                </Card>
+                  <View className="flex-1">
+                    <Text className="text-card-foreground font-medium text-left text-lg">Enter topic</Text>
+                    <Text className="text-muted-foreground text-xs text-left">Type a topic/paragraph to generate questions</Text>
+                  </View>
+                </View>
+              </Card>
             </TouchableOpacity>
           </View>
         </View>
 
-        <TypeWriter
-          texts={[
-            "Try 'World Map based questions for UPSC'",
-            "Try 'Quit India Movement based questions for UPSC'",
-            "Try 'Profit and Loss for SSC CGL'",
-            "Try 'Indian History for SSC CGL'",
-            "Try 'Quantitative Aptitude for CAT'",
-            "Try 'Chemistry for NEET'",
-            "Try 'Biolgy Female Human Anatomy'",
-          ]}
-          className="text-primary text-lg mt-4 mx-8 text-center opacity-80"
-        />
+        <View className="items-center justify-center mt-4 mx-8">
+          <Text className="text-primary text-lg opacity-80">Try:</Text>
+          <TypeWriter
+            texts={[
+              "'IELTS vocabulary'",
+              "'World Map based questions for UPSC'",
+              "'River system of India'",
+              "'Indian Constitution'",
+              "'Genetics and heredity MCQs for NEET'",
+              "'Profit and Loss for SSC CGL'",
+              "'Integration hard questions for JEE Advance'",
+              "'Human anatomy quiz for medical entrance'",
+              "''Physics numericals on electromagnetism'",
+              "'Differential Equations JEE Advance'",
+              "'Quantitative Aptitude for CAT'",
+              "'Practice questions for TOEFL vocabulary'",
+              "'Plant and their reproductive system'",
+              "'Calculus problems for college students'",
+              "'Basics of Python programming'",
+            ]}
+            className="text-primary text-lg opacity-80 text-center"
+          />
+        </View>
+        {/* Temporary: Open Solution screen for experiment */}
+       
       </View>
 
       
@@ -216,6 +268,30 @@ const HomeScreen = () => {
               file={selectedDoc}
               onRemove={() => setSelectedDoc(null)}
             />
+          )}
+
+          {/* Captured Photo Preview */}
+          {capturedPhoto && (
+            <View className="mb-3">
+              <View className="flex-row items-center bg-secondary rounded-2xl border border-border overflow-hidden">
+                <View style={{ width: 60, height: 60 }}>
+                  <Image
+                    source={{ uri: capturedPhoto.uri }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
+                </View>
+                <View className="flex-1 px-3 py-2">
+                  <Text className="text-muted-foreground" numberOfLines={1}>Photo attached</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setCapturedPhoto(null)}
+                  className="w-10 h-10 rounded-full items-center justify-center"
+                >
+                  <Icon name="close" size={18} color="#A0A0B2" />
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
 
           <View className="flex-row items-center bg-secondary rounded-3xl border border-border px-2">
@@ -274,7 +350,14 @@ const HomeScreen = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
+    <SourcePickerDialog
+      visible={isAskDialogVisible}
+      onClose={() => setIsAskDialogVisible(false)}
+      onCamera={handleOpenCamera}
+      onGallery={handlePickFromGallery}
+    />
     </SafeAreaView>
+    </View>
   );
 };
 

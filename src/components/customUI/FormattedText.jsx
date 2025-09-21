@@ -1,13 +1,17 @@
 import React from 'react';
 import { View } from 'react-native';
-import Markdown from 'react-native-markdown-display';
+import MarkdownMathView from 'react-native-markdown-math-view';
 
 const FormattedText = ({ content, baseColor = '#ffffff', fontSize = 14 }) => {
   if (!content) return null;
 
-  // Custom styles for markdown
+  // Custom styles for markdown + math
   const markdownStyles = {
     body: {
+      color: baseColor,
+      fontSize: fontSize,
+    },
+    text: {
       color: baseColor,
       fontSize: fontSize,
     },
@@ -35,17 +39,7 @@ const FormattedText = ({ content, baseColor = '#ffffff', fontSize = 14 }) => {
     bullet_list: {
       marginLeft: 0,
     },
-    bullet_list_icon: {
-      color: baseColor,
-      marginRight: 4,
-      marginLeft: 0,
-    },
     ordered_list: {
-      marginLeft: 0,
-    },
-    ordered_list_icon: {
-      color: baseColor,
-      marginRight: 4,
       marginLeft: 0,
     },
     paragraph: {
@@ -60,32 +54,34 @@ const FormattedText = ({ content, baseColor = '#ffffff', fontSize = 14 }) => {
       fontWeight: 'bold',
     },
     blockquote: {
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderLeftColor: baseColor,
+      color: baseColor,
+      borderLeftColor: '#374151',
       borderLeftWidth: 4,
       padding: 8,
       marginVertical: 8,
     },
     code_inline: {
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      color: baseColor,
+      color: '#ffffff',
+      backgroundColor: '#1f2937',
       paddingHorizontal: 4,
       borderRadius: 4,
     },
     code_block: {
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      color: '#ffffff',
+      backgroundColor: '#1f2937',
       padding: 8,
       marginVertical: 8,
       borderRadius: 4,
     },
     fence: {
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      color: '#ffffff',
+      backgroundColor: '#1f2937',
       padding: 8,
       marginVertical: 8,
       borderRadius: 4,
     },
     link: {
-      color: '#3b82f6', // blue-500
+      color: '#3b82f6',
       textDecorationLine: 'underline',
     },
     hr: {
@@ -95,23 +91,14 @@ const FormattedText = ({ content, baseColor = '#ffffff', fontSize = 14 }) => {
     },
   };
 
-  // Process LaTeX in the content
-  const processContent = (text) => {
-    // Replace $$ ... $$ with ```math ... ```
-    text = text.replace(/\$\$(.*?)\$\$/g, '```math\n$1\n```');
-    // Replace $ ... $ with `$ ... $`
-    text = text.replace(/\$(.*?)\$/g, '`$1`');
-    return text;
-  };
-
   return (
     <View>
-      <Markdown
-        style={markdownStyles}
-        mergeStyle={true}
+      <MarkdownMathView
+        markdownStyle={markdownStyles}
+        style={{ color: baseColor, fontSize }}
       >
-        {processContent(content)}
-      </Markdown>
+        {content}
+      </MarkdownMathView>
     </View>
   );
 };
