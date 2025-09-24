@@ -314,12 +314,12 @@ const QuestionCard = React.memo(
             )}
           </View>
           {/* Question text with Markdown + Math */}
-          <View className="mt-1">
+          <View className="mt-1 text-white">
             <MarkdownMathView
               markdownStyle={{
-                body: { color: '#ffffff' },
+                body: { color: '#ffffff', },
                 heading1: { color: '#ffffff' },
-                text: { color: '#ffffff' },
+                text: { color: 'white' },
                 heading2: { color: '#ffffff' },
                 heading3: { color: '#ffffff' },
                 bullet_list: { color: '#ffffff' },

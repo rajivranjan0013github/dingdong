@@ -5,3 +5,5 @@ rootProject.name = 'topicwise.apps'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 
+apply from: new File(["node", "--print", "require.resolve('expo/scripts/autolinking.gradle')"].execute(null, rootDir).text.trim())
+useExpoModules()

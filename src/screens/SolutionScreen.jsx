@@ -21,11 +21,10 @@ const SolutionScreen2 = ({ route }) => {
                 markdownStyle={{
                     body: { color: '#ffffff' },
                     heading1: { color: '#ffffff' },
-                    text: { color: 'white' }, 
                     heading2: { color: '#ffffff' },
                     heading3: { color: '#ffffff' },
-                    bullet_list: { color: '#ffffff' },
-                    ordered_list: { color: '#ffffff' },
+                    bullet_list: { color: 'white' },
+                    ordered_list: { color: 'white' },
                     paragraph: { color: 'white' },
                     code_inline: { color: '#ffffff', backgroundColor: '#1f2937' },
                     code_block: { color: '#ffffff', backgroundColor: '#1f2937', padding: 0 },

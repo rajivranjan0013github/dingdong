@@ -24,7 +24,6 @@ import UserInitialsBadge from './UserInitialsBadge';
 import CustomDrawerContent from './CustomDrawerContent';
 import LanguageSelectScreen from '../screens/onboarding/LanguageSelectScreen';
 import AskDoubtCamera from '../screens/AskDoubtCamera';
-import AskDoubtEdit from '../screens/AskDoubtEdit';
 import DoubtsScreen from '../screens/DoubtsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -126,11 +125,7 @@ const AppNavigator = () => {
             component={AskDoubtCamera}
             options={{ headerShown: false }}
           />
-          <Stack.Screen
-            name="AskDoubtEdit"
-            component={AskDoubtEdit}
-            options={{ headerShown: false }}
-          />
+         
           <Stack.Screen
             name="GeneratingSolution"
             component={GeneratingSolutionScreen}

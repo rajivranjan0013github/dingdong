@@ -17,8 +17,11 @@ import { useNavigation } from '@react-navigation/native';
 import { setCurrentQuestionBook } from '../redux/slices/questionBookSlice';
 import { generateTopic } from '../redux/slices/topicSlice';
 import { uploadPdf } from '../redux/slices/topicSlice';
+import { uploadDoubtImage } from '../redux/slices/topicSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { pick, types } from '@react-native-documents/picker';
+import * as ImagePicker from 'expo-image-picker';
+import ExpoImageCropTool from 'expo-image-crop-tool';
 import { Text } from '../components/ui/text';
 import TypeWriter from '../components/customUI/TypeWriter';
 import SelectedPDF from '../components/customUI/SelectedPDF';
@@ -144,12 +147,42 @@ const HomeScreen = () => {
 
   const handlePickFromGallery = async () => {
     try {
-      const result = await pick({ type: [types.images], allowMultipleSelection: false });
-      if (result && result.length > 0) {
-        const image = result[0];
-        setIsAskDialogVisible(false);
-        navigation.navigate('AskDoubtEdit', { path: image.uri, source: 'gallery' });
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        return;
       }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (result.cancelled || result.canceled) return;
+      const asset = result.assets ? result.assets[0] : result;
+      const sourceUri = asset?.uri;
+      if (!sourceUri) return;
+
+      const cropResult = await ExpoImageCropTool.openCropperAsync({
+        imageUri: sourceUri,
+        shape: 'rectangle',
+        format: 'jpeg',
+        compressImageQuality: 0.9,
+      });
+
+      const out = typeof cropResult === 'string' ? cropResult : cropResult?.uri || cropResult?.path;
+      if (!out) return;
+      const finalUri = out.startsWith('file://') ? out : `file://${out}`;
+
+      setIsAskDialogVisible(false);
+      const formData = new FormData();
+      formData.append('file', {
+        uri: finalUri,
+        type: 'image/jpeg',
+        name: 'doubt.jpg',
+      });
+      navigation.navigate('GeneratingSolution');
+      dispatch(uploadDoubtImage({ formData }));
     } catch (e) {}
   };
 
@@ -269,6 +302,8 @@ const HomeScreen = () => {
               onRemove={() => setSelectedDoc(null)}
             />
           )}
+
+          {/* Cropped Gallery Image Preview is intentionally not shown; we upload immediately after crop */}
 
           {/* Captured Photo Preview */}
           {capturedPhoto && (

@@ -1,0 +1,31 @@
+diff --git a/node_modules/react-native-markdown-math-view/src/MarkdownMathView.tsx b/node_modules/react-native-markdown-math-view/src/MarkdownMathView.tsx
+index 709164e..150fa69 100644
+--- a/node_modules/react-native-markdown-math-view/src/MarkdownMathView.tsx
++++ b/node_modules/react-native-markdown-math-view/src/MarkdownMathView.tsx
+@@ -53,7 +53,7 @@ const MarkdownMathView = ({
+   const renderEquation = (node: ASTNode) => {
+     const { content } = node
+ 
+-    return <MathJax key={node.key}>{content}</MathJax>
++    return <MathJax key={node.key} color={"white"}>{content}</MathJax>
+   }
+ 
+   const rules: RenderRules = {
+@@ -61,7 +61,7 @@ const MarkdownMathView = ({
+     math_block: renderEquation,
+     textgroup: (node, children) => {
+       return (
+-        <Text key={node.key} selectable={true}>
++        <Text key={node.key} selectable={true} style={{ color: "white" }}>
+           {children}
+         </Text>
+       )
+@@ -72,7 +72,7 @@ const MarkdownMathView = ({
+     return (
+       <View style={style} className={className}>
+         <Markdown
+-          style={{ markdownStyle }}
++          style={ markdownStyle  }
+           rules={rules}
+           markdownit={markdownItInstance}
+         >

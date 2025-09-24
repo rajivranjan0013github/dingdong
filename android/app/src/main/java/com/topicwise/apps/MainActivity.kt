@@ -19,7 +19,7 @@ class MainActivity : ReactActivity() {
   }
 
   // ✅ Handle deep links when app is already running
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
   }
