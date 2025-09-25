@@ -29,7 +29,6 @@ const AskDoubtCamera = () => {
             Alert.alert('Permission required', 'Please allow Camera access to take a photo.');
           }
         } else {
-          // iOS: the component API can request permission; allow render then re-check
           setHasPermission(true);
         }
       } catch (e) {
