@@ -83,8 +83,8 @@ android {
         applicationId "com.topicwise.apps"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 11
-        versionName "1.10"
+        versionCode 16
+        versionName "1.15"
     }
     signingConfigs {
         debug {
@@ -131,4 +131,7 @@ dependencies {
     }
 
     
+    // Google Play In-App Updates (KTX)
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation 'com.google.android.play:app-update-ktx:2.1.0'
 }
